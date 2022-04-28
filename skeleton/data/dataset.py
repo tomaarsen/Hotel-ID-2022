@@ -10,6 +10,8 @@ from torch.utils.data import Dataset
 from skeleton.data.batch import HIDBatch, HIDSample
 import albumentations as albu
 
+HOTEL_ID_MAPPING = {}
+
 class ImageDataset(Dataset):
     """
     Dataset contains folder of images 
@@ -36,6 +38,9 @@ class ImageDataset(Dataset):
         image = np.asarray(image)
         image_id = int(image_path.stem)
         hotel_id = int(image_path.parent.stem)
+        if hotel_id not in HOTEL_ID_MAPPING:
+            HOTEL_ID_MAPPING[hotel_id] = len(HOTEL_ID_MAPPING)
+        hotel_id = HOTEL_ID_MAPPING[hotel_id]
         # width, height = image.width, image.height
 
         sample = HIDSample(

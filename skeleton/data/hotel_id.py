@@ -12,7 +12,6 @@ import pathlib
 from typing import Iterator, List, Optional, Tuple
 
 import torch as t
-import torchaudio.transforms as T
 from skeleton.data.collating import collate_hid
 from skeleton.data.dataset import ImageDataset
 from pytorch_lightning import LightningDataModule
@@ -88,11 +87,6 @@ class HotelIDDataModule(LightningDataModule):
             test_ds,
             batch_size=1,
         )
-
-        # print(len(self.train_dl))
-        # print(len(self.val_dl))
-        # print(len(self.test_dl))
-        # breakpoint()
 
     @property
     def num_hotels(self):

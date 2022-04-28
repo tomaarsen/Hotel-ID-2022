@@ -16,7 +16,7 @@ min_lr=0.0
 
 # hyperparameters related to data pre-processing and network architecture
 embedding_size=512
-num_workers=0
+num_workers=2
 
 # execute train CLI
 python "$project_dir"/cli_train.py \
