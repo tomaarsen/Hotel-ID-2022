@@ -93,20 +93,20 @@ class HotelID(LightningModule):
         # save hyperparameters for easy reloading of model
         self.save_hyperparameters()
 
-    def forward(self, fbank: t.Tensor) -> Tuple[t.Tensor, t.Tensor]:
+    def forward(self, images: t.Tensor) -> Tuple[t.Tensor, t.Tensor]:
         # we split the forward pass into 2 phases:
 
         # first compute the speaker embeddings based on the spectrogram:
-        speaker_embedding = self.compute_embedding(fbank)
+        embedding = self.compute_embedding(images)
 
         # then compute the speaker prediction probabilities based on the
         # embedding
-        speaker_prediction = self.compute_prediction(speaker_embedding)
+        prediction = self.compute_prediction(embedding)
 
-        return speaker_embedding, speaker_prediction
+        return prediction
 
-    def compute_embedding(self, fbank: t.Tensor) -> t.Tensor:
-        return self.embedding_layer(fbank)
+    def compute_embedding(self, images: t.Tensor) -> t.Tensor:
+        return self.embedding_layer(images)
 
     def compute_prediction(self, embedding: t.Tensor) -> t.Tensor:
         prediction = self.prediction_layer(embedding)
@@ -122,23 +122,23 @@ class HotelID(LightningModule):
         assert list(batch.images.shape) == [batch.batch_size, 3, self.width, self.height]
         assert len(batch.images.shape) == 4
 
-        spectrogram = batch.network_input
-        speaker_labels = batch.ground_truth
+        images = batch.images
+        labels = batch.hotel_ids
 
         # then compute the forward pass
-        embedding, prediction = self.forward(spectrogram)
+        prediction = self.forward(images)
 
         # based on the output of the forward pass we compute the loss
-        loss = self.loss_fn(prediction, speaker_labels)
+        loss = self.loss_fn(prediction, labels)
 
         # based on the output of the forward pass we compute some metrics
-        self.train_acc(prediction, speaker_labels)
+        self.train_acc(prediction, labels)
 
         # log training loss
         self.log("loss", loss, prog_bar=False)
 
         # store recent training embeddings
-        self._add_batch_to_embedding_queue(embedding)
+        # self._add_batch_to_embedding_queue(embedding)
 
         # The value we return will be minimized
         return loss
@@ -148,14 +148,14 @@ class HotelID(LightningModule):
         self.log("train_acc", self.train_acc, prog_bar=True)
 
         # update the mean&std of training embeddings
-        mean, std = self.compute_mean_std_batch([e for e in self.embeddings_queue])
+        # mean, std = self.compute_mean_std_batch([e for e in self.embeddings_queue])
 
-        with t.no_grad():
-            mean = mean.to(self.mean_embedding.device)
-            std = std.to(self.std_embedding.device)
+        # with t.no_grad():
+        #     mean = mean.to(self.mean_embedding.device)
+        #     std = std.to(self.std_embedding.device)
 
-            self.mean_embedding[:] = mean
-            self.std_embedding[:] = std
+        #     self.mean_embedding[:] = mean
+        #     self.std_embedding[:] = std
 
     def validation_step(
         self, batch: HIDBatch, *args, **kwargs
@@ -166,40 +166,41 @@ class HotelID(LightningModule):
         assert list(batch.images.shape) == [batch.batch_size, 3, self.width, self.height]
         assert len(batch.images.shape) == 4
 
-        breakpoint()
-
-        spectrogram = batch.network_input
-        speaker_labels = batch.ground_truth
-        sample_keys = batch.keys
+        images = batch.images
+        labels = batch.hotel_ids
+        sample_keys = batch.image_ids
 
         # then compute the forward pass
-        embedding, prediction = self.forward(spectrogram)
+        prediction = self.forward(images)
 
         # based on the output of the forward pass we compute the loss
-        loss = self.loss_fn(prediction, speaker_labels)
+        loss = self.loss_fn(prediction, labels)
 
         # based on the output of the forward pass we compute some metrics
-        self.val_acc(prediction, speaker_labels)
+        self.val_acc(prediction, labels)
 
         # the value(s) we return will be saved until the end op the epoch
         # and passed to `validation_epoch_end`
-        return embedding.to("cpu"), loss, sample_keys
+        return loss
 
     def validation_epoch_end(
-        self, outputs: List[Tuple[t.Tensor, t.Tensor, List[str]]]
+        self, loss: t.Tensor
     ) -> None:
         # at the end of a validation epoch we compute the validation EER
         # based on the embeddings and log all metrics
 
         # unwrap outputs
-        embeddings = [embedding for embedding, _, _ in outputs]
-        losses = [loss for _, loss, _ in outputs]
-        sample_keys = [key for _, _, key in outputs]
+        # embeddings = [embedding for embedding, _, _ in outputs]
+        # losses = [loss for _, loss, _ in outputs]
+        # sample_keys = [key for _, _, key in outputs]
 
         # log metrics
         self.log("val_acc", self.val_acc, prog_bar=True)
-        self.log("val_loss", t.mean(t.stack(losses)), prog_bar=True)
+        self.log("val_loss", t.mean(t.stack(loss)), prog_bar=True)
 
+        # breakpoint()
+
+        """
         # compute and log val EER
         if self.val_trials is not None:
             val_eer = self._evaluate_embeddings(
@@ -209,6 +210,7 @@ class HotelID(LightningModule):
 
             self.log("val_eer", val_eer, prog_bar=True)
             # tune.report(val_eer=float(val_eer))
+        """
 
     def test_step(
         self, batch: HIDBatch, *args, **kwargs
@@ -219,11 +221,11 @@ class HotelID(LightningModule):
         assert list(batch.images.shape) == [batch.batch_size, 3, self.width, self.height]
         assert len(batch.images.shape) == 4
 
-        spectrogram = batch.network_input
-        sample_keys = batch.keys
+        images = batch.images
+        sample_keys = batch.image_ids
 
         # then compute the speaker embedding
-        embedding = self.compute_embedding(spectrogram)
+        embedding = self.compute_embedding(images)
 
         # the value(s) we return will be saved until the end op the epoch
         # and passed to `test_epoch_end`
@@ -231,6 +233,7 @@ class HotelID(LightningModule):
 
     def test_epoch_end(self, outputs: List[t.Tensor]) -> None:
         # at the end of the test epoch we compute the test EER
+        """
         if self.test_trials is None:
             return
 
@@ -243,6 +246,7 @@ class HotelID(LightningModule):
 
         # log EER
         self.log("test_eer", test_eer)
+        """
 
     def configure_optimizers(self):
         # setup the optimization algorithm
@@ -281,6 +285,7 @@ class HotelID(LightningModule):
 
         return [optimizer], [schedule]
 
+    """
     def _evaluate_embeddings(
         self,
         embeddings: List[t.Tensor],
@@ -336,3 +341,4 @@ class HotelID(LightningModule):
         std, mean = t.std_mean(stacked_tensors, dim=0)
 
         return mean, std
+    """

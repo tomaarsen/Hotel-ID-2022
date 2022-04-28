@@ -43,7 +43,6 @@ class Preprocessor:
                         std=(0.229, 0.224, 0.225),
                         max_pixel_value=255.0),
         ])
-        pass
 
     def train_data_pipeline(
         self,

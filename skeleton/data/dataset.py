@@ -34,8 +34,8 @@ class ImageDataset(Dataset):
         image = Image.open(image_path).convert('RGB')
         # The augmentations need image to be a numpy array
         image = np.asarray(image)
-        image_id = image_path.stem
-        hotel_id = image_path.parent.stem
+        image_id = int(image_path.stem)
+        hotel_id = int(image_path.parent.stem)
         # width, height = image.width, image.height
 
         sample = HIDSample(

@@ -13,6 +13,7 @@ from typing import Iterator, List, Optional, Tuple
 
 import torch as t
 import torchaudio.transforms as T
+from skeleton.data.collating import collate_hid
 from skeleton.data.dataset import ImageDataset
 from pytorch_lightning import LightningDataModule
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
@@ -24,7 +25,7 @@ from skeleton.data.batch import (
 )
 from skeleton.data.preprocess import Preprocessor
 from skeleton.evaluation.evaluator import EvaluationPair
-from torch.utils.data.dataloader import default_collate
+
 
 ################################################################################
 # data module implementation
@@ -61,7 +62,7 @@ class HotelIDDataModule(LightningDataModule):
             train_ds,
             num_workers=self.num_workers,
             batch_size=self.batch_size,
-            collate_fn=collate,
+            collate_fn=collate_hid,
             drop_last=True,
         )
 
@@ -74,7 +75,7 @@ class HotelIDDataModule(LightningDataModule):
             val_ds,
             num_workers=self.num_workers,
             batch_size=self.batch_size,
-            collate_fn=collate,
+            collate_fn=collate_hid,
             drop_last=True,
         )
 
@@ -109,17 +110,3 @@ class HotelIDDataModule(LightningDataModule):
 
 ################################################################################
 # helper methods
-
-
-def _collate_samples(
-    sample_iter: Iterator[HIDSample],
-) -> HIDBatch:
-    return HIDBatch.pad_right_collate_fn([s for s in sample_iter])
-
-def collate(
-    sample_iter: Iterator[HIDSample],
-) -> HIDBatch:
-    batch_size = len(sample_iter)
-    images, image_ids, hotel_ids = zip(*sample_iter)
-    images = default_collate(images)
-    return HIDBatch(batch_size, image_ids, hotel_ids, images)

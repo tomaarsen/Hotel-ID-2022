@@ -72,11 +72,11 @@ class ResNet(nn.Module):
         relu = nn.ReLU(inplace=True)
         bn = nn.BatchNorm2d(in_channels)
         # Convolution with 7x7 kernel size, stride 2, 64 out_channels
-        # We use 1 as in-channels and 64 as out-channels for the first 7x7 convolution
+        # We use 3 as in-channels and 64 as out-channels for the first 7x7 convolution
         # We can use bias=False because we BN afterwards anyways
         self.conv1 = nn.Sequential(
             nn.Conv2d(
-                1, in_channels, kernel_size=(7, 7), stride=2, padding=3, bias=False
+                3, in_channels, kernel_size=(7, 7), stride=2, padding=3, bias=False
             ),
             bn,
             relu,

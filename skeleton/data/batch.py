@@ -7,13 +7,9 @@
 
 
 from dataclasses import dataclass
-from typing import List
 
-import torch
 import torch as t
-from torch.utils.data._utils.collate import default_collate
 
-from skeleton.data.collating import collate_append_constant
 
 ################################################################################
 # data sample and data batch classes
@@ -25,10 +21,10 @@ class HIDSample:
     image: t.Tensor
 
     # a unique identifier for this image
-    image_id: str
+    image_id: int
 
     # class of sample
-    hotel_id: str
+    hotel_id: int
 
     def __iter__(self):
         return iter((self.image, self.image_id, self.hotel_id))
@@ -39,10 +35,10 @@ class HIDBatch:
     batch_size: int
 
     # the unique identifiers for the images in this batch
-    image_ids: List[str]
+    image_ids: t.Tensor
 
     # classes of samples for the images in this batch
-    hotel_ids: List[str]
+    hotel_ids: t.Tensor
 
     # tensor of floats with shape [BATCH_SIZE, ...]
     images: t.Tensor
@@ -50,11 +46,11 @@ class HIDBatch:
     def __len__(self) -> int:
         return self.batch_size
 
-    def to(self, device: torch.device) -> "HIDBatch":
+    def to(self, device: t.device) -> "HIDBatch":
         return HIDBatch(
             self.batch_size,
-            self.image_ids,
-            self.hotel_ids,
+            self.image_ids.to(device),
+            self.hotel_ids.to(device),
             self.images.to(device),
         )
 
