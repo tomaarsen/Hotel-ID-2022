@@ -43,7 +43,6 @@ class HotelIDDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.preprocessor = preprocessor
-
         self.train_split = 0.9
 
     def setup(self, stage: Optional[str] = None) -> None:
@@ -55,8 +54,9 @@ class HotelIDDataModule(LightningDataModule):
         # Set up training dataset & dataloader
         train_ds = ImageDataset(
             train_filepaths,
-            transform=self.preprocessor.train_data_pipeline,
+            transform=self.preprocessor.train_transform,
         )
+        
         self.train_dl = t.utils.data.DataLoader(
             train_ds,
             num_workers=self.num_workers,
@@ -68,8 +68,9 @@ class HotelIDDataModule(LightningDataModule):
         # Set up validation dataset & dataloader
         val_ds = ImageDataset(
             val_filepaths,
-            transform=self.preprocessor.val_data_pipeline,
+            transform=self.preprocessor.val_transform,
         )
+        
         self.val_dl = t.utils.data.DataLoader(
             val_ds,
             num_workers=self.num_workers,
@@ -81,7 +82,7 @@ class HotelIDDataModule(LightningDataModule):
         # Set up testing dataset & dataloader, batch size of 1
         test_ds = ImageDataset(
             list((self.data_folder / "test_images").glob("*.jpg")),
-            transform=self.preprocessor.test_data_pipeline,
+            transform=self.preprocessor.val_transform,
         )
         self.test_dl = t.utils.data.DataLoader(
             test_ds,
@@ -101,6 +102,3 @@ class HotelIDDataModule(LightningDataModule):
     def test_dataloader(self) -> EVAL_DATALOADERS:
         return self.test_dl
 
-
-################################################################################
-# helper methods

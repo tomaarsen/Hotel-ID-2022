@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-
 # location of repository and data
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 project_dir=.
-data_folder=F:/MLiPHotel-IDData/Hotel-ID-2022
+data_folder="$project_dir"/data/data_task2/hotel-id-to-combat-human-trafficking-2022-fgvc9
 
 # hyperparameters for optimization
 batch_size=4
@@ -16,7 +16,7 @@ min_lr=0.0
 
 # hyperparameters related to data pre-processing and network architecture
 embedding_size=512
-num_workers=2
+num_workers=4
 
 # execute train CLI
 python "$project_dir"/cli_train.py \
@@ -30,5 +30,5 @@ python "$project_dir"/cli_train.py \
   --epochs $num_epochs \
   --momentum $momentum \
   --weight_decay $weight_decay \
-  --min_lr $min_lr
-  # --gpus 0
+  --min_lr $min_lr \
+  --gpus 0

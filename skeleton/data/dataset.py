@@ -41,7 +41,6 @@ class ImageDataset(Dataset):
         if hotel_id not in HOTEL_ID_MAPPING:
             HOTEL_ID_MAPPING[hotel_id] = len(HOTEL_ID_MAPPING)
         hotel_id = HOTEL_ID_MAPPING[hotel_id]
-        # width, height = image.width, image.height
 
         sample = HIDSample(
             image,
@@ -51,10 +50,7 @@ class ImageDataset(Dataset):
 
         # Apply transformations, i.e. augmentation
         if self.transform:
-            sample = self.transform(sample)
-
-        # Convert to Tensor
-        sample.image = self.to_tensor(sample.image)
+            sample.image = self.transform(sample.image)
 
         return sample
 

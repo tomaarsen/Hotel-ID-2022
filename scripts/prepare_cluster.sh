@@ -8,6 +8,7 @@ cd "$SCRIPT_DIR" || exit 1
 # make a directory on the ceph file system to store logs and checkpoints
 # and make a symlink to access it directly from the root of the project
 CEPH_USER_DIR=/ceph/csedu-scratch/course/IMC030_MLIP/users/"$USER"
+DATA_DIR=/scratch/"$USER"/data/hotel-2022
 mkdir -p "$CEPH_USER_DIR"/slurm
 chmod 700 "$CEPH_USER_DIR" # only you can access
 ln -sfn "$CEPH_USER_DIR" "$SCRIPT_DIR"/../logs
@@ -51,8 +52,6 @@ function setup_link {
 setup_link "$CEPH_USER_DIR"/.local ~/.local
 setup_link "$CEPH_USER_DIR"/.cache ~/.cache
 
-# make a symlink to the data in order to directly access it from the root of the project
-ln -sfn /ceph/csedu-scratch/course/IMC030_MLIP/data "$SCRIPT_DIR"/../data
 
 # install the `virtualenv` command
 python3 -m pip install --upgrade pip
@@ -80,3 +79,7 @@ ssh cn48 "
   cd $PWD;
   ./setup_virtual_environment.sh
 "
+
+# make a symlink to the data in order to directly access it from the root of the project
+mkdir -p "$SCRIPT_DIR"/../data
+ln -sfn /ceph/csedu-scratch/course/IMC030_MLIP/users/data_task2 "$SCRIPT_DIR"/../data

@@ -18,7 +18,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 if [ "$HOSTNAME" != "cn99" ] && [ "$HOSTNAME" != "cn47" ] && [ "$HOSTNAME" != "cn48" ]; then
   VENV_DIR=$PROJECT_DIR/venv
 else
-  VENV_DIR=/scratch/$USER/virtual_environments/tiny-voxceleb-venv
+  VENV_DIR=/scratch/$USER/virtual_environments/hotel-venv
 fi
 
 mkdir -p "$VENV_DIR"
