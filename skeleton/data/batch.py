@@ -33,7 +33,7 @@ class HIDSample:
 @dataclass
 class HIDBatch:
     # the number of samples this batch contains
-    batch_size: str
+    batch_size: int
 
     # the unique identifiers for the images in this batch
     image_ids: List[str]
@@ -44,7 +44,7 @@ class HIDBatch:
     # tensor of floats with shape [BATCH_SIZE, ...]
     images: t.Tensor
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.batch_size
 
     def to(self, device: torch.device) -> "HIDBatch":
