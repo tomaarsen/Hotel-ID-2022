@@ -24,6 +24,7 @@ from skeleton.data.batch import (
 )
 from skeleton.data.preprocess import Preprocessor
 from skeleton.evaluation.evaluator import EvaluationPair
+from torch.utils.data.dataloader import default_collate
 
 ################################################################################
 # data module implementation
@@ -54,47 +55,43 @@ class HotelIDDataModule(LightningDataModule):
         # Set up training dataset & dataloader
         train_ds = ImageDataset(
             train_filepaths,
-            transform=[
-                self.preprocessor.train_data_pipeline
-            ],
+            transform=self.preprocessor.train_data_pipeline,
         )
         self.train_dl = t.utils.data.DataLoader(
             train_ds,
             num_workers=self.num_workers,
             batch_size=self.batch_size,
-            # collate_fn=train_ds.collate_fn,
+            collate_fn=collate,
             drop_last=True,
         )
 
         # Set up validation dataset & dataloader
         val_ds = ImageDataset(
             val_filepaths,
-            transform=[
-                self.preprocessor.val_data_pipeline
-            ],
+            transform=self.preprocessor.val_data_pipeline,
         )
         self.val_dl = t.utils.data.DataLoader(
             val_ds,
             num_workers=self.num_workers,
             batch_size=self.batch_size,
-            # collate_fn=_collate_samples,
+            collate_fn=collate,
             drop_last=True,
         )
 
         # Set up testing dataset & dataloader, batch size of 1
         test_ds = ImageDataset(
             list((self.data_folder / "test_images").glob("*.jpg")),
-            transform=[self.preprocessor.test_data_pipeline],
+            transform=self.preprocessor.test_data_pipeline,
         )
         self.test_dl = t.utils.data.DataLoader(
             test_ds,
             batch_size=1,
         )
 
-        print(len(self.train_dl))
-        print(len(self.val_dl))
-        print(len(self.test_dl))
-        breakpoint()
+        # print(len(self.train_dl))
+        # print(len(self.val_dl))
+        # print(len(self.test_dl))
+        # breakpoint()
 
     @property
     def num_hotels(self):
@@ -118,3 +115,11 @@ def _collate_samples(
     sample_iter: Iterator[HIDSample],
 ) -> HIDBatch:
     return HIDBatch.pad_right_collate_fn([s for s in sample_iter])
+
+def collate(
+    sample_iter: Iterator[HIDSample],
+) -> HIDBatch:
+    batch_size = len(sample_iter)
+    images, image_ids, hotel_ids = zip(*sample_iter)
+    images = default_collate(images)
+    return HIDBatch(batch_size, image_ids, hotel_ids, images)

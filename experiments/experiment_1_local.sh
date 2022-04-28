@@ -6,6 +6,8 @@ data_folder=F:/MLiPHotel-IDData/Hotel-ID-2022
 
 # hyperparameters for optimization
 batch_size=4
+width=512
+height=512
 learning_rate=0.1
 num_epochs=120
 momentum=0.9
@@ -20,6 +22,8 @@ num_workers=0
 python "$project_dir"/cli_train.py \
   --data_folder $data_folder \
   --batch_size $batch_size \
+  --width $width \
+  --height $height \
   --num_workers $num_workers \
   --embedding_size $embedding_size \
   --learning_rate $learning_rate \

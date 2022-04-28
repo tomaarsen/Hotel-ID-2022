@@ -37,6 +37,8 @@ class HotelID(LightningModule):
         # num_inp_features: int,
         num_embedding: int,
         num_hotels: int,
+        width: int,
+        height: int,
         learning_rate: float,
         num_epochs: int = 120,
         momentum: float = 0.9,
@@ -52,6 +54,8 @@ class HotelID(LightningModule):
         # self.num_inp_features = num_inp_features
         self.num_embedding = num_embedding
         self.num_hotels = num_hotels
+        self.width = width
+        self.height = height
         self.learning_rate = learning_rate
         self.num_epochs = num_epochs
         self.momentum = momentum
@@ -114,9 +118,9 @@ class HotelID(LightningModule):
     ) -> t.Tensor:
         # first unwrap the batch into the input tensor and ground truth labels
         assert isinstance(batch, HIDBatch)
-        assert batch.batch_size == batch.network_input.shape[0]
-        assert batch.network_input.shape[2] == self.num_inp_features
-        assert len(batch.network_input.shape) == 4
+        # The 3 is for colors
+        assert list(batch.images.shape) == [batch.batch_size, 3, self.width, self.height]
+        assert len(batch.images.shape) == 4
 
         spectrogram = batch.network_input
         speaker_labels = batch.ground_truth
@@ -158,9 +162,11 @@ class HotelID(LightningModule):
     ) -> Tuple[t.Tensor, t.Tensor, List[str]]:
         # first unwrap the batch into the input tensor and ground truth labels
         assert isinstance(batch, HIDBatch)
-        assert batch.batch_size == batch.network_input.shape[0]
-        assert batch.network_input.shape[2] == self.num_inp_features
-        assert len(batch.network_input.shape) == 4
+        # The 3 is for colors
+        assert list(batch.images.shape) == [batch.batch_size, 3, self.width, self.height]
+        assert len(batch.images.shape) == 4
+
+        breakpoint()
 
         spectrogram = batch.network_input
         speaker_labels = batch.ground_truth
@@ -209,9 +215,9 @@ class HotelID(LightningModule):
     ) -> Tuple[t.Tensor, List[str]]:
         # first unwrap the batch into the input tensor
         assert isinstance(batch, HIDBatch)
-        assert batch.batch_size == batch.network_input.shape[0] == 1
-        assert batch.network_input.shape[2] == self.num_inp_features
-        assert len(batch.network_input.shape) == 4
+        # The 3 is for colors
+        assert list(batch.images.shape) == [batch.batch_size, 3, self.width, self.height]
+        assert len(batch.images.shape) == 4
 
         spectrogram = batch.network_input
         sample_keys = batch.keys

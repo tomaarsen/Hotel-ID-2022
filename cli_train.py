@@ -34,6 +34,18 @@ from skeleton.models.prototype import HotelID
     help="batch size to use for train and val split",
 )
 @click.option(
+    "--width",
+    type=int,
+    default=512,
+    help="Image width after augmentation",
+)
+@click.option(
+    "--height",
+    type=int,
+    default=512,
+    help="Image height after augmentation",
+)
+@click.option(
     "--num_workers",
     type=int,
     default=6,
@@ -78,6 +90,8 @@ from skeleton.models.prototype import HotelID
 def main(
     data_folder: pathlib.Path,
     batch_size: int,
+    width: int,
+    height: int,
     num_workers: int,
     embedding_size: int,
     learning_rate: float,
@@ -93,6 +107,8 @@ def main(
     print("### input arguments ###")
     print(f"shard_folder={data_folder}")
     print(f"batch_size={batch_size}")
+    print(f"batch_size={width}")
+    print(f"batch_size={height}")
     print(f"num_workers={num_workers}")
     print(f"embedding_size={embedding_size}")
     print(f"learning_rate={learning_rate}")
@@ -113,7 +129,7 @@ def main(
         data_folder=data_folder,
         batch_size=batch_size,
         num_workers=num_workers,
-        preprocessor=Preprocessor(),
+        preprocessor=Preprocessor(width, height),
     )
 
     # alpha = dm.get_alpha()
@@ -123,6 +139,8 @@ def main(
     model = HotelID(
         num_embedding=embedding_size,
         num_hotels=dm.num_hotels,
+        width=width,
+        height=height,
         learning_rate=learning_rate,
         num_epochs=epochs,
         momentum=momentum,

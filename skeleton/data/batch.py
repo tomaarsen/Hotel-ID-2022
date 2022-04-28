@@ -30,6 +30,9 @@ class HIDSample:
     # class of sample
     hotel_id: str
 
+    def __iter__(self):
+        return iter((self.image, self.image_id, self.hotel_id))
+
 @dataclass
 class HIDBatch:
     # the number of samples this batch contains
@@ -38,8 +41,8 @@ class HIDBatch:
     # the unique identifiers for the images in this batch
     image_ids: List[str]
 
-    # classes of sample with shape [BATCH_SIZE]
-    hotel_ids: t.Tensor
+    # classes of samples for the images in this batch
+    hotel_ids: List[str]
 
     # tensor of floats with shape [BATCH_SIZE, ...]
     images: t.Tensor
@@ -51,7 +54,7 @@ class HIDBatch:
         return HIDBatch(
             self.batch_size,
             self.image_ids,
-            self.hotel_ids.to(device),
+            self.hotel_ids,
             self.images.to(device),
         )
 
