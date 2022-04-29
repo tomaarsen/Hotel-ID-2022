@@ -13,7 +13,7 @@ git stash
 git checkout models
 
 # Update the models
-clear models/
+rm models/*.ckpt
 cp $best models/
 cp $last models/
 git add models/
