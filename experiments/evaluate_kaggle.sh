@@ -9,8 +9,8 @@ i=0;
 for checkpoint_path in /kaggle/temp/models/*.ckpt; do
   [ -e "$checkpoint_path" ] || continue
   python "$project_dir"/cli_evaluate.py \
-    $checkpoint_path \
-    $data_folder \
+    --checkpoint_path $checkpoint_path \
+    --data_folder $data_folder \
     --gpus 1
   ((i++))
 done;

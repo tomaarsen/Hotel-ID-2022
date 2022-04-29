@@ -123,7 +123,7 @@ class HotelID(LightningModule):
         assert len(batch.images.shape) == 4
 
         images = batch.images
-        labels = batch.hotel_ids
+        labels = batch.labels
 
         # then compute the forward pass
         prediction = self.forward(images)
@@ -167,7 +167,7 @@ class HotelID(LightningModule):
         assert len(batch.images.shape) == 4
 
         images = batch.images
-        labels = batch.hotel_ids
+        labels = batch.labels
         sample_keys = batch.image_ids
 
         # then compute the forward pass
@@ -211,6 +211,7 @@ class HotelID(LightningModule):
             # tune.report(val_eer=float(val_eer))
         """
 
+    '''
     def test_step(
         self, batch: HIDBatch, *args, **kwargs
     ) -> Tuple[t.Tensor, List[str]]:
@@ -246,6 +247,7 @@ class HotelID(LightningModule):
         # log EER
         self.log("test_eer", test_eer)
         """
+    '''
 
     def configure_optimizers(self):
         # setup the optimization algorithm

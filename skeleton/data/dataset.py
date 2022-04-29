@@ -10,8 +10,6 @@ from torch.utils.data import Dataset
 from skeleton.data.batch import HIDBatch, HIDSample
 import albumentations as albu
 
-HOTEL_ID_MAPPING = {}
-
 class ImageDataset(Dataset):
     """
     Dataset contains folder of images 
@@ -22,9 +20,10 @@ class ImageDataset(Dataset):
     transform: `List[Callable]`
         A function to call on each image
     """
-    def __init__(self, filenames: List[pathlib.Path], transform: Callable = None, **kwargs):
+    def __init__(self, filenames: List[pathlib.Path], hotel_ids: List[int], transform: Callable = None, **kwargs):
         super().__init__()
         self.to_tensor = T.ToTensor()
+        self.hotel_ids = hotel_ids
         self.transform = transform
         self.filenames = filenames
 
@@ -38,14 +37,13 @@ class ImageDataset(Dataset):
         image = np.asarray(image)
         image_id = int(image_path.stem)
         hotel_id = int(image_path.parent.stem)
-        if hotel_id not in HOTEL_ID_MAPPING:
-            HOTEL_ID_MAPPING[hotel_id] = len(HOTEL_ID_MAPPING)
-        hotel_id = HOTEL_ID_MAPPING[hotel_id]
+        label = self.hotel_ids.index(hotel_id)
 
         sample = HIDSample(
             image,
             image_id,
-            hotel_id
+            hotel_id,
+            label
         )
 
         # Apply transformations, i.e. augmentation

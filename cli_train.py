@@ -124,9 +124,12 @@ def main(
     # set random seed
     pytorch_lightning.seed_everything(random_seed)
 
+    hotel_ids = sorted(int(folder.stem) for folder in (data_folder / "train_images").iterdir())
+
     # build data loader
     dm = HotelIDDataModule(
         data_folder=data_folder,
+        hotel_ids=hotel_ids,
         batch_size=batch_size,
         num_workers=num_workers,
         preprocessor=Preprocessor(width, height),

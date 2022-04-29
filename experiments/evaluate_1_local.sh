@@ -12,9 +12,10 @@ if [ -z "$*" ]; then echo "Please supply a job id, e.g. 1112891"; exit; fi
 
 # location of repository and data
 project_dir=.
-shard_folder=F:/MLiPVoxCelebData/tiny-voxceleb-shards/
-shards_dirs_to_evaluate=F:/MLiPVoxCelebData/tiny-voxceleb-shards/dev/,F:/MLiPVoxCelebData/tiny-voxceleb-shards/eval
-trial_lists=F:/MLiPVoxCelebData/tiny-voxceleb/dev_trials.txt,F:/MLiPVoxCelebData/tiny-voxceleb/eval_trials_no_gt.txt
+data_folder="F:/MLiPHotel-IDData/Hotel-ID-2022"
+# shard_folder=F:/MLiPVoxCelebData/tiny-voxceleb-shards/
+# shards_dirs_to_evaluate=F:/MLiPVoxCelebData/tiny-voxceleb-shards/dev/,F:/MLiPVoxCelebData/tiny-voxceleb-shards/eval
+# trial_lists=F:/MLiPVoxCelebData/tiny-voxceleb/dev_trials.txt,F:/MLiPVoxCelebData/tiny-voxceleb/eval_trials_no_gt.txt
 
 # hyperparameters related to data pre-processing and network architecture
 normalize_channel_wise=true
@@ -25,23 +26,18 @@ version=$1
 echo "Evaluating for version: $version"
 
 # execute train CLI
-i=0;
-for checkpoint_path in F:/MLiPVoxCelebData/logs/lightning_logs/version_"$version"/checkpoints/*; do
+# i=0;
+for checkpoint_path in logs/lightning_logs/version_"$version"/checkpoints/*; do
   [ -e "$checkpoint_path" ] || continue
-  name=${checkpoint_path##*/}
-  epoch=${name:0:10}
-  val_eer=${name:26:14}
-  score_file="scores/scores_${version}_${epoch}_${val_eer}_$i"
-  echo "Input checkpoint path: $checkpoint_path";
-  echo "Output score file: $score_file";
+  # name=${checkpoint_path##*/}
+  # epoch=${name:0:10}
+  # val_eer=${name:26:14}
+  # score_file="scores/scores_${version}_${epoch}_${val_eer}_$i"
+  # echo "Input checkpoint path: $checkpoint_path";
+  # echo "Output score file: $score_file";
   python "$project_dir"/cli_evaluate.py \
-    $checkpoint_path \
-    $shard_folder \
-    $shards_dirs_to_evaluate \
-    $trial_lists \
-    $score_file \
-    --normalize_channel_wise $normalize_channel_wise \
-    --n_mels $n_mels \
-    --use-gpu "1"
-  ((i++))
+    --checkpoint_path $checkpoint_path \
+    --data_folder $data_folder \
+    --gpus 1
+  # ((i++))
 done;

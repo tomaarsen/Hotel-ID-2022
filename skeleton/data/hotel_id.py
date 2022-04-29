@@ -34,12 +34,14 @@ class HotelIDDataModule(LightningDataModule):
     def __init__(
         self,
         data_folder: pathlib.Path,
+        hotel_ids: List[int],
         batch_size: int,
         num_workers: int,
         preprocessor: Preprocessor,
     ):
         super().__init__()
         self.data_folder = data_folder
+        self.hotel_ids = hotel_ids
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.preprocessor = preprocessor
@@ -54,6 +56,7 @@ class HotelIDDataModule(LightningDataModule):
         # Set up training dataset & dataloader
         train_ds = ImageDataset(
             train_filepaths,
+            self.hotel_ids,
             transform=self.preprocessor.train_transform,
         )
         
@@ -69,6 +72,7 @@ class HotelIDDataModule(LightningDataModule):
         # Set up validation dataset & dataloader
         val_ds = ImageDataset(
             val_filepaths,
+            self.hotel_ids,
             transform=self.preprocessor.val_transform,
         )
         
@@ -81,14 +85,14 @@ class HotelIDDataModule(LightningDataModule):
         )
 
         # Set up testing dataset & dataloader, batch size of 1
-        test_ds = ImageDataset(
-            list((self.data_folder / "test_images").glob("*.jpg")),
-            transform=self.preprocessor.val_transform,
-        )
-        self.test_dl = t.utils.data.DataLoader(
-            test_ds,
-            batch_size=1,
-        )
+        # test_ds = ImageDataset(
+        #     list((self.data_folder / "test_images").glob("*.jpg")),
+        #     transform=self.preprocessor.val_transform,
+        # )
+        # self.test_dl = t.utils.data.DataLoader(
+        #     test_ds,
+        #     batch_size=1,
+        # )
 
     @property
     def num_hotels(self):
@@ -100,6 +104,6 @@ class HotelIDDataModule(LightningDataModule):
     def val_dataloader(self) -> EVAL_DATALOADERS:
         return self.val_dl
 
-    def test_dataloader(self) -> EVAL_DATALOADERS:
-        return self.test_dl
+    # def test_dataloader(self) -> EVAL_DATALOADERS:
+    #     return self.test_dl
 
