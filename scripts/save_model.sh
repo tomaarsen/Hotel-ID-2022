@@ -18,6 +18,7 @@ cp $best models/
 cp $last models/
 git add models/
 git commit -m "Save new models & clear previous ones"
+git push
 
 # Move back to main
 git checkout main
