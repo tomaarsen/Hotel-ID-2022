@@ -165,24 +165,24 @@ def main(
         )
 
     # configure callback managing checkpoints, and checkpoint file names
-    # pattern = "epoch_{epoch:04d}.step_{step:09d}.val-eer_{val_eer:.4f}"
-    # ModelCheckpoint.CHECKPOINT_NAME_LAST = pattern + ".last"
-    # checkpointer = ModelCheckpoint(
-    #     # save_top_k=-1,
-    #     # every_n_epochs=5,
-    #     monitor="val_eer",
-    #     filename=pattern + ".best",
-    #     save_last=True,
-    #     auto_insert_metric_name=False,
-    # )
+    pattern = "epoch_{epoch:04d}.step_{step:09d}.val-loss_{val_loss:.4f}"
+    ModelCheckpoint.CHECKPOINT_NAME_LAST = pattern + ".last"
+    checkpointer = ModelCheckpoint(
+        save_top_k=-1,
+        every_n_epochs=5,
+        monitor="val_loss",
+        filename=pattern + ".best",
+        save_last=True,
+        auto_insert_metric_name=False,
+    )
 
     # initialize trainer
     trainer = pytorch_lightning.Trainer(
-        # stochastic_weight_avg=True,
+        stochastic_weight_avg=True,
         max_epochs=epochs,
         gpus=gpus,
         callbacks=[
-            # checkpointer,
+            checkpointer,
             LearningRateMonitor(),
         ],
         default_root_dir="logs",
@@ -192,8 +192,8 @@ def main(
     trainer.fit(model, datamodule=dm)
 
     # test loop (on dev set)
-    # model = model.load_from_checkpoint(checkpointer.best_model_path)
-    # trainer.test(model, datamodule=dm)
+    model = model.load_from_checkpoint(checkpointer.best_model_path)
+    trainer.test(model, datamodule=dm)
 
 
 if __name__ == "__main__":

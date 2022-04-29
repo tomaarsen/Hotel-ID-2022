@@ -82,7 +82,7 @@ class HotelID(LightningModule):
         # The loss function. Be careful - some loss functions apply the (log)softmax
         # layer internally (e.g F.cross_entropy) while others do not
         # (e.g F.nll_loss)
-        self.loss_fn = F.nll_loss
+        self.loss_fn = F.cross_entropy
         # self.loss_fn = WeightedLoss(F.nll_loss, alpha, )
         # self.loss_fn = F.cross_entropy
 
@@ -198,7 +198,6 @@ class HotelID(LightningModule):
         self.log("val_acc", self.val_acc, prog_bar=True)
         self.log("val_loss", t.mean(t.stack(loss)), prog_bar=True)
 
-        # breakpoint()
 
         """
         # compute and log val EER

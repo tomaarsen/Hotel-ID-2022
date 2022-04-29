@@ -48,7 +48,7 @@ class HotelIDDataModule(LightningDataModule):
     def setup(self, stage: Optional[str] = None) -> None:
         # Get the filepaths of all images, and split them between training and validation
         image_folder = self.data_folder / "train_images"
-        filepaths = list(image_folder.glob("**/*.jpg"))[:100]
+        filepaths = list(image_folder.glob("**/*.jpg"))
         train_filepaths, val_filepaths = train_test_split(filepaths, train_size=self.train_split)
         
         # Set up training dataset & dataloader
@@ -63,6 +63,7 @@ class HotelIDDataModule(LightningDataModule):
             batch_size=self.batch_size,
             collate_fn=collate_hid,
             drop_last=True,
+            shuffle=True
         )
 
         # Set up validation dataset & dataloader
