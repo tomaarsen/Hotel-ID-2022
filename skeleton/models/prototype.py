@@ -93,7 +93,7 @@ class HotelID(LightningModule):
         # save hyperparameters for easy reloading of model
         self.save_hyperparameters()
 
-    def forward(self, images: t.Tensor) -> Tuple[t.Tensor, t.Tensor]:
+    def forward(self, images: t.Tensor) -> t.Tensor:
         # we split the forward pass into 2 phases:
 
         # first compute the speaker embeddings based on the spectrogram:
