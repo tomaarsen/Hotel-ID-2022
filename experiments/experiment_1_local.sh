@@ -15,7 +15,7 @@ weight_decay=0.0005
 min_lr=0.0
 
 # hyperparameters related to data pre-processing and network architecture
-embedding_size=4096
+embedding_size=512
 num_workers=6
 
 # execute train CLI

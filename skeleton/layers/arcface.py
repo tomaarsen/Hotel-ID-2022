@@ -74,7 +74,7 @@ class HotelIdModel(nn.Module):
         self.arc_face = ArcMarginProduct(self.embed_size, out_features, s=30.0, m=0.20, easy_margin=False)
 
         self.post = nn.Sequential(
-            nn.utils.weight_norm(nn.Linear(1000, self.embed_size*2), dim=None),
+            nn.utils.weight_norm(nn.Linear(2304, self.embed_size*2), dim=None),
             nn.BatchNorm1d(self.embed_size*2),
             nn.Dropout(0.2),
             nn.utils.weight_norm(nn.Linear(self.embed_size*2, self.embed_size)),

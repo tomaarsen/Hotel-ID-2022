@@ -24,7 +24,7 @@ from skeleton.evaluation.evaluator import (
     EvaluationPair,
     SpeakerRecognitionEvaluator,
 )
-from skeleton.layers.arcface import HotelIdModel
+from skeleton.layers.arcface import ArcMarginProduct, HotelIdModel
 from skeleton.layers.resnet import ResNet34
 
 ################################################################################
@@ -81,6 +81,7 @@ class HotelID(LightningModule):
         #     nn.Linear(in_features=num_embedding, out_features=num_hotels),
         #     nn.LogSoftmax(dim=1),
         # )
+        # self.prediction_layer = ArcMarginProduct(self.num_embedding, self.num_hotels, s=30.0, m=0.20, easy_margin=False)
 
         # The loss function. Be careful - some loss functions apply the (log)softmax
         # layer internally (e.g F.cross_entropy) while others do not
@@ -96,25 +97,25 @@ class HotelID(LightningModule):
         # save hyperparameters for easy reloading of model
         self.save_hyperparameters()
 
-    def forward(self, images: t.Tensor) -> t.Tensor:
+    def forward(self, images: t.Tensor, labels: t.Tensor) -> t.Tensor:
         # we split the forward pass into 2 phases:
 
         # first compute the speaker embeddings based on the spectrogram:
-        embedding = self.compute_embedding(images)
+        embedding = self.compute_embedding(images, labels)
         return embedding
 
         # then compute the speaker prediction probabilities based on the
         # embedding
-        prediction = self.compute_prediction(embedding)
+        prediction = self.compute_prediction(embedding, labels)
 
         return prediction
 
-    def compute_embedding(self, images: t.Tensor) -> t.Tensor:
-        return self.embedding_layer(images)
+    def compute_embedding(self, images: t.Tensor, labels: t.Tensor) -> t.Tensor:
+        return self.embedding_layer(images, targets=labels)
 
-    # def compute_prediction(self, embedding: t.Tensor) -> t.Tensor:
-    #     prediction = self.prediction_layer(embedding)
-
+    # def compute_prediction(self, embedding: t.Tensor, labels: t.Tensor) -> t.Tensor:
+    #     prediction = self.prediction_layer(embedding, labels)
+    #     breakpoint()
     #     return prediction
 
     def training_step(
@@ -130,7 +131,7 @@ class HotelID(LightningModule):
         labels = batch.labels
 
         # then compute the forward pass
-        prediction = self.forward(images)
+        prediction = self.forward(images, labels)
 
         # based on the output of the forward pass we compute the loss
         loss = self.loss_fn(prediction, labels)
@@ -175,7 +176,7 @@ class HotelID(LightningModule):
         sample_keys = batch.image_ids
 
         # then compute the forward pass
-        prediction = self.forward(images)
+        prediction = self.forward(images, labels)
 
         # based on the output of the forward pass we compute the loss
         loss = self.loss_fn(prediction, labels)
