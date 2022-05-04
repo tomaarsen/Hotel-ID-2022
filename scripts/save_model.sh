@@ -6,6 +6,9 @@ fi
 best=$1
 last=$2
 
+# Save current git branch to return to later
+branch=$(git branch --show-current)
+
 # Save the current changes that might exist on main
 git stash
 
@@ -20,8 +23,8 @@ git add models/
 git commit -m "Save new models & clear previous ones"
 git push
 
-# Move back to main
-git checkout main
+# Move back to original branch
+git checkout $branch
 
 # Restore last changes in the stash
 git stash pop
