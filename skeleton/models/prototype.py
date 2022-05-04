@@ -24,6 +24,7 @@ from skeleton.evaluation.evaluator import (
     EvaluationPair,
     SpeakerRecognitionEvaluator,
 )
+from skeleton.layers.arcface import HotelIdModel
 from skeleton.layers.resnet import ResNet34
 
 ################################################################################
@@ -69,15 +70,17 @@ class HotelID(LightningModule):
         # of shape [BATCH_SIZE, 1, NUM_MEL, NUM_FRAMES]
         # into embedding of shape [BATCH_SIZE, NUM_EMBEDDING]
         # This includes a pooling step inside of the ResNet layer
-        self.embedding_layer = ResNet34(out_channels=num_embedding)
+        # self.embedding_layer = ResNet34(out_channels=num_embedding)
+        backbone_name="eca_nfnet_l0"
+        self.embedding_layer = HotelIdModel(self.num_hotels, self.num_embedding, backbone_name)
 
         # Fully-connected layer which is responsible for transforming the
         # speaker embedding of shape [BATCH_SIZE, NUM_EMBEDDING] into a
         # speaker prediction of shape [BATCH_SIZE, NUM_SPEAKERS]
-        self.prediction_layer = nn.Sequential(
-            nn.Linear(in_features=num_embedding, out_features=num_hotels),
-            nn.LogSoftmax(dim=1),
-        )
+        # self.prediction_layer = nn.Sequential(
+        #     nn.Linear(in_features=num_embedding, out_features=num_hotels),
+        #     nn.LogSoftmax(dim=1),
+        # )
 
         # The loss function. Be careful - some loss functions apply the (log)softmax
         # layer internally (e.g F.cross_entropy) while others do not
@@ -98,6 +101,7 @@ class HotelID(LightningModule):
 
         # first compute the speaker embeddings based on the spectrogram:
         embedding = self.compute_embedding(images)
+        return embedding
 
         # then compute the speaker prediction probabilities based on the
         # embedding
@@ -108,10 +112,10 @@ class HotelID(LightningModule):
     def compute_embedding(self, images: t.Tensor) -> t.Tensor:
         return self.embedding_layer(images)
 
-    def compute_prediction(self, embedding: t.Tensor) -> t.Tensor:
-        prediction = self.prediction_layer(embedding)
+    # def compute_prediction(self, embedding: t.Tensor) -> t.Tensor:
+    #     prediction = self.prediction_layer(embedding)
 
-        return prediction
+    #     return prediction
 
     def training_step(
         self, batch: HIDBatch, *args, **kwargs

@@ -181,7 +181,7 @@ def main(
 
     # initialize trainer
     trainer = pytorch_lightning.Trainer(
-        stochastic_weight_avg=True,
+        # stochastic_weight_avg=True, # https://github.com/pytorch/pytorch/issues/28594#issuecomment-934650242
         max_epochs=epochs,
         gpus=gpus,
         callbacks=[
