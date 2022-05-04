@@ -35,7 +35,6 @@ from skeleton.layers.resnet import ResNet34
 class HotelID(LightningModule):
     def __init__(
         self,
-        # num_inp_features: int,
         num_embedding: int,
         num_hotels: int,
         width: int,
@@ -46,7 +45,7 @@ class HotelID(LightningModule):
         weight_decay: float = 0.0005,
         min_lr: float = 0.0,
         epochs: int = 50,
-        device="cpu",
+        device="cuda:0",
     ):
         super().__init__()
 
@@ -66,29 +65,16 @@ class HotelID(LightningModule):
         # evaluation data
         self.evaluator = SpeakerRecognitionEvaluator()
 
-        # 1-dimensional convolution layer which transforms the Fbank
-        # of shape [BATCH_SIZE, 1, NUM_MEL, NUM_FRAMES]
-        # into embedding of shape [BATCH_SIZE, NUM_EMBEDDING]
-        # This includes a pooling step inside of the ResNet layer
-        # self.embedding_layer = ResNet34(out_channels=num_embedding)
+        # Embedding layer
         backbone_name="eca_nfnet_l0"
         self.embedding_layer = HotelIdModel(self.num_hotels, self.num_embedding, backbone_name)
 
-        # Fully-connected layer which is responsible for transforming the
-        # speaker embedding of shape [BATCH_SIZE, NUM_EMBEDDING] into a
-        # speaker prediction of shape [BATCH_SIZE, NUM_SPEAKERS]
-        # self.prediction_layer = nn.Sequential(
-        #     nn.Linear(in_features=num_embedding, out_features=num_hotels),
-        #     nn.LogSoftmax(dim=1),
-        # )
-        # self.prediction_layer = ArcMarginProduct(self.num_embedding, self.num_hotels, s=30.0, m=0.20, easy_margin=False)
+        # Fully-connected layer
+        self.prediction_layer = ArcMarginProduct(self.num_embedding, self.num_hotels, s=30.0, m=0.20, easy_margin=False, device=device)
 
-        # The loss function. Be careful - some loss functions apply the (log)softmax
-        # layer internally (e.g F.cross_entropy) while others do not
-        # (e.g F.nll_loss)
+        # The loss function. 
+        # self.loss_fn = F.nll_loss
         self.loss_fn = F.cross_entropy
-        # self.loss_fn = WeightedLoss(F.nll_loss, alpha, )
-        # self.loss_fn = F.cross_entropy
 
         # used to keep track of training/validation accuracy
         self.train_acc = Accuracy()
@@ -98,26 +84,16 @@ class HotelID(LightningModule):
         self.save_hyperparameters()
 
     def forward(self, images: t.Tensor, labels: t.Tensor) -> t.Tensor:
-        # we split the forward pass into 2 phases:
-
-        # first compute the speaker embeddings based on the spectrogram:
         embedding = self.compute_embedding(images, labels)
-        return embedding
-
-        # then compute the speaker prediction probabilities based on the
-        # embedding
         prediction = self.compute_prediction(embedding, labels)
-
-        return prediction
+        return embedding, prediction
 
     def compute_embedding(self, images: t.Tensor, labels: t.Tensor) -> t.Tensor:
         return self.embedding_layer(images, targets=labels)
 
-    # def compute_prediction(self, embedding: t.Tensor, labels: t.Tensor) -> t.Tensor:
-    #     prediction = self.prediction_layer(embedding, labels)
-    #     breakpoint()
-    #     return prediction
-
+    def compute_prediction(self, embedding: t.Tensor, labels: t.Tensor) -> t.Tensor:
+        return self.prediction_layer(embedding, labels)
+         
     def training_step(
         self, batch: HIDBatch, *args, **kwargs
     ) -> t.Tensor:
@@ -131,7 +107,7 @@ class HotelID(LightningModule):
         labels = batch.labels
 
         # then compute the forward pass
-        prediction = self.forward(images, labels)
+        embedding, prediction = self.forward(images, labels)
 
         # based on the output of the forward pass we compute the loss
         loss = self.loss_fn(prediction, labels)
@@ -176,7 +152,7 @@ class HotelID(LightningModule):
         sample_keys = batch.image_ids
 
         # then compute the forward pass
-        prediction = self.forward(images, labels)
+        embedding, prediction = self.forward(images, labels)
 
         # based on the output of the forward pass we compute the loss
         loss = self.loss_fn(prediction, labels)
@@ -204,55 +180,6 @@ class HotelID(LightningModule):
         self.log("val_loss", t.mean(t.stack(loss)), prog_bar=True)
 
 
-        """
-        # compute and log val EER
-        if self.val_trials is not None:
-            val_eer = self._evaluate_embeddings(
-                embeddings, sample_keys, self.val_trials
-            )
-            val_eer = t.tensor(val_eer, dtype=t.float32)
-
-            self.log("val_eer", val_eer, prog_bar=True)
-            # tune.report(val_eer=float(val_eer))
-        """
-
-    '''
-    def test_step(
-        self, batch: HIDBatch, *args, **kwargs
-    ) -> Tuple[t.Tensor, List[str]]:
-        # first unwrap the batch into the input tensor
-        assert isinstance(batch, HIDBatch)
-        # The 3 is for colors
-        assert list(batch.images.shape) == [batch.batch_size, 3, self.width, self.height]
-        assert len(batch.images.shape) == 4
-
-        images = batch.images
-        sample_keys = batch.image_ids
-
-        # then compute the speaker embedding
-        embedding = self.compute_embedding(images)
-
-        # the value(s) we return will be saved until the end op the epoch
-        # and passed to `test_epoch_end`
-        return embedding, sample_keys
-
-    def test_epoch_end(self, outputs: List[t.Tensor]) -> None:
-        # at the end of the test epoch we compute the test EER
-        """
-        if self.test_trials is None:
-            return
-
-        # unwrap outputs
-        embeddings = [embedding for embedding, _ in outputs]
-        sample_keys = [key for _, key in outputs]
-
-        # compute test EER
-        test_eer = self._evaluate_embeddings(embeddings, sample_keys, self.test_trials)
-
-        # log EER
-        self.log("test_eer", test_eer)
-        """
-    '''
 
     def configure_optimizers(self):
         # setup the optimization algorithm

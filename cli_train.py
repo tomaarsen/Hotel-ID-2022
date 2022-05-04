@@ -194,9 +194,9 @@ def main(
     # train loop
     trainer.fit(model, datamodule=dm)
 
-    # test loop (on dev set)
-    model = model.load_from_checkpoint(checkpointer.best_model_path)
-    trainer.test(model, datamodule=dm)
+    # # test loop (on dev set)
+    # model = model.load_from_checkpoint(checkpointer.best_model_path)
+    # trainer.test(model, datamodule=dm)
 
 
 if __name__ == "__main__":
