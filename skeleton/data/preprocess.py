@@ -33,13 +33,24 @@ class Preprocessor:
                 albu.RandomContrast(0.1, p=1),
                 albu.RandomGamma(p=1)], p=0.3),
             albu.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.0, rotate_limit=15, p=0.3),
-            albu.Cutout(p=0.5, max_h_size=80, max_w_size=80, num_holes=2, fill_value=(255,0,0)),
+            albu.CoarseDropout(p=0.5, min_holes=1, max_holes=6, 
+                               min_height=height//16, max_height=height//4,
+                               min_width=width//16,  max_width=width//4), 
+
+            albu.CoarseDropout(p=1., max_holes=1, 
+                               min_height=height//4, max_height=height//2,
+                               min_width=width//4,  max_width=width//2, 
+                               fill_value=(255,0,0)),
             albu.ToFloat(),
             APT.transforms.ToTensorV2(),
         ])
         
         self.val_transform = albu.Compose([
             albu.Resize(width=width, height=height),
+            albu.CoarseDropout(p=1., max_holes=1, 
+                               min_height=height//4, max_height=height//2,
+                               min_width=width//4,  max_width=width//2, 
+                               fill_value=(255,0,0)),
             albu.ToFloat(),
             APT.transforms.ToTensorV2(),
         ])
