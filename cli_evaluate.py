@@ -8,22 +8,13 @@
 
 import csv
 import click
-import traceback
-from collections import defaultdict
 import pathlib
-import pytorch_lightning
 from PIL import Image
 
 import torch as t
 from tqdm import tqdm
 
-from skeleton.data.batch import HIDBatch
-from skeleton.data.dataset import HOTEL_ID_MAPPING
 from skeleton.data.preprocess import Preprocessor
-from skeleton.data.hotel_id import (
-    HotelIDDataModule,
-)
-from skeleton.evaluation.evaluator import EmbeddingSample, SpeakerRecognitionEvaluator
 from skeleton.models.prototype import HotelID
 
 ########################################################################################
@@ -64,7 +55,7 @@ def main(
     with open("submission.csv", "w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=",")
         writer.writerow(["image_id", "hotel_id"])
-        for image_file in test_image_files:
+        for image_file in tqdm(test_image_files):
             image = Image.open(image_file).convert('RGB')
             image = preprocessor.val_transform(image)
             image = image.unsqueeze(0)
