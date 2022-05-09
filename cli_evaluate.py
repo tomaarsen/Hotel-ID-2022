@@ -57,7 +57,7 @@ def main(
         writer.writerow(["image_id", "hotel_id"])
         for image_file in tqdm(test_image_files):
             image = Image.open(image_file).convert('RGB')
-            image = preprocessor.val_transform(image)
+            image = preprocessor.val_transform(image=image)
             image = image.unsqueeze(0)
             output = model(image)
             indices = list(output.squeeze().topk(5).indices)
