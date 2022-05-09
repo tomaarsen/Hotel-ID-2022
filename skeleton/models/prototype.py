@@ -83,10 +83,12 @@ class HotelID(LightningModule):
         # save hyperparameters for easy reloading of model
         self.save_hyperparameters()
 
-    def forward(self, images: t.Tensor, labels: t.Tensor) -> t.Tensor:
+    def forward(self, images: t.Tensor, labels: t.Tensor = None) -> t.Tensor:
         embedding = self.compute_embedding(images, labels)
-        prediction = self.compute_prediction(embedding, labels)
-        return embedding, prediction
+        if labels:
+            prediction = self.compute_prediction(embedding, labels)
+            return embedding, prediction
+        return embedding
 
     def compute_embedding(self, images: t.Tensor, labels: t.Tensor) -> t.Tensor:
         return self.embedding_layer(images, targets=labels)
