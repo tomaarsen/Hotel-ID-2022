@@ -55,7 +55,7 @@ def main(
     test_image_files = list((data_folder / "test_images").glob("*.jpg"))
     with open("submission.csv", "w", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=",")
-        writer.writerow(["image_id", "hotel_id"])
+        writer.writerow(["image", "hotel_id"])
         for image_file in tqdm(test_image_files):
             image = Image.open(image_file).convert('RGB')
             image = np.asarray(image)
