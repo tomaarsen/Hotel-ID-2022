@@ -7,10 +7,12 @@
 ################################################################################
 
 import csv
+import os
 import click
 import pathlib
 from PIL import Image
 import numpy as np
+import pandas as pd
 
 import torch as t
 from tqdm import tqdm
@@ -49,22 +51,30 @@ def main(
     # set to eval mode, and move to GPU if applicable
     model = model.eval()
 
-    hotel_ids = sorted(int(folder.stem) for folder in (data_folder / "train_images").iterdir())
+    hotel_ids = sorted(
+        int(folder.stem) for folder in (data_folder / "train_images").iterdir()
+    )
 
-    # Set up testing dataset & dataloader, batch size of 1
-    test_image_files = list((data_folder / "test_images").glob("*.jpg"))
-    with open("submission.csv", "w", newline="") as csvfile:
-        writer = csv.writer(csvfile, delimiter=",")
-        writer.writerow(["image", "hotel_id"])
-        for image_file in tqdm(test_image_files):
-            image = Image.open(image_file).convert('RGB')
-            image = np.asarray(image)
-            image = preprocessor.val_transform(image=image)["image"]
-            image = image.unsqueeze(0)
-            output = model(image)
-            indices = list(output.squeeze().topk(5).indices)
-            hids = " ".join(str(hotel_ids[int(index)]) for index in indices)
-            writer.writerow([image_file.name, hids])
+    test_image_files = list((data_folder / "test_images").iterdir())
+    predictions = []
+    for image_file in tqdm(test_image_files):
+        image = Image.open(image_file).convert("RGB")
+        image = np.asarray(image)
+        image = preprocessor.val_transform(image=image)["image"]
+        image = image.unsqueeze(0)
+        output = model(image)
+        indices = list(output.squeeze().topk(5).indices)
+        hids = " ".join(str(hotel_ids[int(index)]) for index in indices)
+        predictions.append(hids)
+
+    df = pd.DataFrame(
+        data={
+            "image_id": (path.name for path in test_image_files),
+            "hotel_id": predictions,
+        }
+    ).sort_values(by="image_id")
+    df.to_csv("submission.csv", index=False)
+
 
 if __name__ == "__main__":
     main()
