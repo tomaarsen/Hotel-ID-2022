@@ -85,7 +85,7 @@ class HotelID(LightningModule):
 
     def forward(self, images: t.Tensor, labels: t.Tensor = None) -> t.Tensor:
         embedding = self.compute_embedding(images, labels)
-        if labels:
+        if labels is not None:
             prediction = self.compute_prediction(embedding, labels)
             return embedding, prediction
         return embedding
