@@ -48,6 +48,7 @@ def main(
     gpus: bool,
 ):
     model = HotelID.load_from_checkpoint(str(checkpoint_path), map_location="cpu")
+    model = model.to("cuda")
 
     # load data pipeline
     preprocessor = Preprocessor(model.width, model.height)
@@ -66,17 +67,18 @@ def main(
     # breakpoint()
     with t.no_grad():
         # Generate the base embeddings...
-        test_ds = ImageDataset(
+        base_ds = ImageDataset(
             list((data_folder / "train_images").glob("**/*.jpg")),
             hotel_ids,
             transform=preprocessor.val_transform,
         )
 
-        test_dl = DataLoader(test_ds, batch_size=16, num_workers=2, collate_fn=collate_hid)
+        base_dl = DataLoader(base_ds, batch_size=16, num_workers=2, collate_fn=collate_hid)
 
-        base_embeddings = t.tensor([])
-        base_hotel_ids = t.tensor([])
-        for batch in tqdm(test_dl, desc="Generating base embeddings"):
+        base_embeddings = t.tensor([], device="cuda")
+        base_hotel_ids = t.tensor([], device="cuda")
+        for batch in tqdm(base_dl, desc="Generating base embeddings"):
+            batch = batch.to("cuda")
             base_embeddings = t.cat((base_embeddings, model(batch.images)))
             base_hotel_ids = t.cat((base_hotel_ids, batch.hotel_ids))
         # Base embeddings generated.
@@ -93,6 +95,7 @@ def main(
             image = np.asarray(image)
             image = preprocessor.val_transform(image=image)["image"]
             image = image.unsqueeze(0)
+            image = image.to("cuda")
 
             # Get the embedding, and the 5 hotels with the most similar embeddings
             embedding = model(image)
