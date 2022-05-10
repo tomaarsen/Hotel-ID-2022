@@ -54,3 +54,9 @@ class Preprocessor:
             albu.ToFloat(),
             APT.transforms.ToTensorV2(),
         ])
+        
+        self.test_transform = albu.Compose([
+            albu.Resize(width=width, height=height),
+            albu.ToFloat(),
+            APT.transforms.ToTensorV2(),
+        ])

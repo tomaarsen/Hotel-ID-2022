@@ -70,10 +70,10 @@ def main(
         base_ds = ImageDataset(
             list((data_folder / "train_images").glob("**/*.jpg")),
             hotel_ids,
-            transform=preprocessor.val_transform,
+            transform=preprocessor.test_transform,
         )
 
-        base_dl = DataLoader(base_ds, batch_size=16, num_workers=2, collate_fn=collate_hid)
+        base_dl = DataLoader(base_ds, batch_size=16, collate_fn=collate_hid)
 
         base_embeddings = t.tensor([], device="cuda")
         base_hotel_ids = t.tensor([], device="cuda")
@@ -93,7 +93,7 @@ def main(
             # Apply validation transformations to the test image
             image = Image.open(image_file).convert("RGB")
             image = np.asarray(image)
-            image = preprocessor.val_transform(image=image)["image"]
+            image = preprocessor.test_transform(image=image)["image"]
             image = image.unsqueeze(0)
             image = image.to("cuda")
 
