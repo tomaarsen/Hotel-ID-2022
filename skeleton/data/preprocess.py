@@ -27,11 +27,13 @@ class Preprocessor:
         self.train_transform = albu.Compose([
             albu.RandomResizedCrop(width, height, scale=(0.6, 1.0), p=1.0),
             albu.Resize(width=width, height=height),
+            albu.Perspective(p=0.5),
+            albu.InvertImg(p=0.5),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf([
                 albu.RandomBrightness(0.1, p=1),
                 albu.RandomContrast(0.1, p=1),
-                albu.RandomGamma(p=1)], p=0.3),
+                albu.RandomGamma(p=1)], p=0.5),
             albu.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.0, rotate_limit=15, p=0.3),
             albu.CoarseDropout(p=0.5, min_holes=1, max_holes=6, 
                                min_height=height//16, max_height=height//4,
