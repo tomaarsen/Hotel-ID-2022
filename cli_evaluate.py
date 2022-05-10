@@ -70,10 +70,10 @@ def main(
         base_ds = ImageDataset(
             list((data_folder / "train_images").glob("**/*.jpg")),
             hotel_ids,
-            transform=preprocessor.test_transform,
+            transform=preprocessor.val_transform,
         )
 
-        base_dl = DataLoader(base_ds, batch_size=16, collate_fn=collate_hid)
+        base_dl = DataLoader(base_ds, batch_size=16, num_workers=3, collate_fn=collate_hid)
 
         base_embeddings = t.tensor([], device="cuda")
         base_hotel_ids = t.tensor([], device="cuda")
