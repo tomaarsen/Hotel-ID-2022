@@ -28,6 +28,11 @@ from skeleton.models.prototype import HotelID
     required=True,
 )
 @click.option(
+    "--backbone",
+    type=str,
+    required=True,
+)
+@click.option(
     "--batch_size",
     type=int,
     default=128,
@@ -89,6 +94,7 @@ from skeleton.models.prototype import HotelID
 )
 def main(
     data_folder: pathlib.Path,
+    backbone: str,
     batch_size: int,
     width: int,
     height: int,
@@ -106,6 +112,7 @@ def main(
     # log input
     print("### input arguments ###")
     print(f"shard_folder={data_folder}")
+    print(f"backbone={backbone}")
     print(f"batch_size={batch_size}")
     print(f"batch_size={width}")
     print(f"batch_size={height}")
@@ -142,6 +149,7 @@ def main(
     model = HotelID(
         num_embedding=embedding_size,
         num_hotels=dm.num_hotels,
+        backbone=backbone,
         width=width,
         height=height,
         learning_rate=learning_rate,

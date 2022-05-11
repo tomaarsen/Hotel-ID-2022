@@ -24,6 +24,7 @@ num_epochs=20
 momentum=0.9
 weight_decay=0.0005
 min_lr=0.0
+backbone="eca_nfnet_l0"
 
 # hyperparameters related to data pre-processing and network architecture
 embedding_size=4096
@@ -33,6 +34,7 @@ num_workers=4
 source "$project_dir"/venv/bin/activate
 python "$project_dir"/cli_train.py \
   --data_folder $data_folder \
+  --backbone $backbone \
   --batch_size $batch_size \
   --width $width \
   --height $height \

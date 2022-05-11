@@ -68,8 +68,6 @@ class HotelIdModel(nn.Module):
         else:
             raise Exception("unknown classifier layer: " + fc_name)
 
-        self.arc_face = ArcMarginProduct(self.embed_size, out_features, s=30.0, m=0.20, easy_margin=False)
-
         self.post = nn.Sequential(
             nn.utils.weight_norm(nn.Linear(in_features, self.embed_size*2), dim=None),
             nn.BatchNorm1d(self.embed_size*2),

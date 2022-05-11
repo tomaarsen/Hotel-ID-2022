@@ -37,6 +37,7 @@ class HotelID(LightningModule):
         self,
         num_embedding: int,
         num_hotels: int,
+        backbone: str,
         width: int,
         height: int,
         learning_rate: float,
@@ -66,8 +67,7 @@ class HotelID(LightningModule):
         self.evaluator = SpeakerRecognitionEvaluator()
 
         # Embedding layer
-        backbone_name="eca_nfnet_l0"
-        self.embedding_layer = HotelIdModel(self.num_hotels, self.num_embedding, backbone_name)
+        self.embedding_layer = HotelIdModel(self.num_hotels, self.num_embedding, backbone)
 
         # Fully-connected layer
         self.prediction_layer = ArcMarginProduct(self.num_embedding, self.num_hotels, s=30.0, m=0.20, easy_margin=False, device=device)
