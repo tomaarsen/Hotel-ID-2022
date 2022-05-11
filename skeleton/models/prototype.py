@@ -26,6 +26,7 @@ from skeleton.evaluation.evaluator import (
 )
 from skeleton.layers.arcface import ArcMarginProduct, HotelIdModel
 from skeleton.layers.resnet import ResNet34
+from timm.optim import Lookahead
 
 ################################################################################
 # Implement the lightning module for training a prototype model
@@ -185,12 +186,17 @@ class HotelID(LightningModule):
 
     def configure_optimizers(self):
         # setup the optimization algorithm
-        optimizer = t.optim.SGD(
+        base_optimizer = t.optim.AdamW(
             self.parameters(),
-            momentum=self.momentum,
             lr=self.learning_rate,
-            weight_decay=self.weight_decay,
         )
+        # base_optimizer = t.optim.SGD(
+        #     self.parameters(),
+        #     momentum=self.momentum,
+        #     lr=self.learning_rate,
+        #     weight_decay=self.weight_decay,
+        # )
+        optimizer = Lookahead(base_optimizer, k=3)
 
         # setup the learning rate schedule.
         schedule = {
