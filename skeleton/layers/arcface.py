@@ -65,6 +65,8 @@ class HotelIdModel(nn.Module):
             self.backbone.fc = nn.Identity()
         elif fc_name == 'head.flatten':
             self.backbone.head.fc = nn.Identity()
+        elif fc_name == 'head':
+            self.backbone.head = nn.Identity()
         else:
             raise Exception("unknown classifier layer: " + fc_name)
 
