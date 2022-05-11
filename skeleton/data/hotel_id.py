@@ -12,6 +12,7 @@ import pathlib
 from typing import Iterator, List, Optional, Tuple
 
 import torch as t
+import torchvision.transforms as T
 from skeleton.data.collating import collate_hid
 from skeleton.data.dataset import ImageDataset
 from pytorch_lightning import LightningDataModule
@@ -59,7 +60,7 @@ class HotelIDDataModule(LightningDataModule):
             self.hotel_ids,
             transform=self.preprocessor.train_transform,
         )
-                
+
         self.train_dl = t.utils.data.DataLoader(
             train_ds,
             num_workers=self.num_workers,
