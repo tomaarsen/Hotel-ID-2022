@@ -70,6 +70,15 @@ class HotelIdModel(nn.Module):
         else:
             raise Exception("unknown classifier layer: " + fc_name)
 
+        if backbone_name.startswith("eca_nfnet"):
+            for param in self.backbone.stem.parameters():
+                param.requires_grad = False
+            for param in self.backbone.stages.parameters():
+                param.requires_grad = False
+        # 3.30 it/s with requires_grad=False
+        # 1.80 it/s as baseline
+        # 3.45 it/s with requires_grad=False and optimizer filtering
+
         self.post = nn.Sequential(
             nn.utils.weight_norm(nn.Linear(in_features, self.embed_size*2), dim=None),
             nn.BatchNorm1d(self.embed_size*2),
