@@ -25,7 +25,6 @@ from skeleton.evaluation.evaluator import (
     SpeakerRecognitionEvaluator,
 )
 from skeleton.layers.arcface import ArcMarginProduct, HotelIdModel
-from skeleton.layers.resnet import ResNet34
 
 ################################################################################
 # Implement the lightning module for training a prototype model
