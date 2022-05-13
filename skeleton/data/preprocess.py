@@ -26,7 +26,7 @@ class Preprocessor:
         # TODO: Add normalization
         self.train_transform = albu.Compose([
             albu.RandomResizedCrop(width, height, scale=(0.6, 1.0), p=1.0),
-            albu.Resize(width=width, height=height),
+            albu.RandomCrop(width=width, height=height),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf([
                 albu.RandomBrightness(0.1, p=1),
@@ -59,7 +59,7 @@ class Preprocessor:
         ])
         
         self.val_transform = albu.Compose([
-            albu.Resize(width=width, height=height),
+            albu.RandomCrop(width=width, height=height),
             albu.CoarseDropout(p=1., max_holes=1, 
                                min_height=height//4, max_height=height//2,
                                min_width=width//4,  max_width=width//2, 
@@ -72,7 +72,7 @@ class Preprocessor:
         ])
         
         self.test_transform = albu.Compose([
-            albu.Resize(width=width, height=height),
+            albu.RandomCrop(width=width, height=height),
             albu.Normalize(mean=(0.485, 0.456, 0.406),
                        std=(0.229, 0.224, 0.225),
                        max_pixel_value=255.0),
