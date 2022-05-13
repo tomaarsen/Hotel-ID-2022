@@ -73,7 +73,7 @@ class HotelIdModel(nn.Module):
         if backbone_name.startswith("eca_nfnet"):
             for param in self.backbone.stem.parameters():
                 param.requires_grad = False
-            for param in self.backbone.stages.parameters():
+            for param in self.backbone.stages[:-1].parameters():
                 param.requires_grad = False
         # 3.30 it/s with requires_grad=False
         # 1.80 it/s as baseline
