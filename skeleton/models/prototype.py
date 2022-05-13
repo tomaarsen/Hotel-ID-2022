@@ -185,7 +185,8 @@ class HotelID(LightningModule):
     def configure_optimizers(self):
         # setup the optimization algorithm
         optimizer = t.optim.SGD(
-            filter(lambda param: param.requires_grad, self.parameters()),
+            # filter(lambda param: param.requires_grad, self.parameters()),
+            self.parameters(),
             momentum=self.momentum,
             lr=self.learning_rate,
             weight_decay=self.weight_decay,
