@@ -70,7 +70,7 @@ def main(
         base_ds = ImageDataset(
             list((data_folder / "train_images").glob("**/*.jpg")),
             hotel_ids,
-            transform=preprocessor.val_transform,
+            transform=preprocessor.test_transform,
         )
 
         base_dl = DataLoader(base_ds, batch_size=16, num_workers=3, collate_fn=collate_hid)
