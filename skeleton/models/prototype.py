@@ -24,7 +24,9 @@ from skeleton.evaluation.evaluator import (
     EvaluationPair,
     SpeakerRecognitionEvaluator,
 )
-from skeleton.layers.arcface import ArcMarginProduct, HotelIdModel
+from skeleton.layers.arcface import ArcMarginProduct
+from skeleton.layers.cosface import HotelIdModel
+from pytorch_metric_learning import losses, regularizers
 
 ################################################################################
 # Implement the lightning module for training a prototype model
@@ -66,14 +68,14 @@ class HotelID(LightningModule):
         self.evaluator = SpeakerRecognitionEvaluator()
 
         # Embedding layer
-        self.embedding_layer = HotelIdModel(self.num_hotels, self.num_embedding, backbone)
+        self.model = HotelIdModel(self.num_hotels, self.num_embedding, backbone)
 
-        # Fully-connected layer
-        self.prediction_layer = ArcMarginProduct(self.num_embedding, self.num_hotels, s=30.0, m=0.20, easy_margin=False, device=device)
-
-        # The loss function. 
-        # self.loss_fn = F.nll_loss
-        self.loss_fn = F.cross_entropy
+        # The loss function.
+        self.loss_fn = losses.CosFaceLoss(
+            num_classes=self.num_hotels,
+            embedding_size=self.num_embedding,
+            embedding_regularizer=regularizers.RegularFaceRegularizer(),
+        )
 
         # used to keep track of training/validation accuracy
         self.train_acc = Accuracy()
@@ -82,36 +84,36 @@ class HotelID(LightningModule):
         # save hyperparameters for easy reloading of model
         self.save_hyperparameters()
 
-    def forward(self, images: t.Tensor, labels: t.Tensor = None) -> t.Tensor:
-        embedding = self.compute_embedding(images, labels)
-        if labels is not None:
-            prediction = self.compute_prediction(embedding, labels)
-            return embedding, prediction
-        return embedding
+    def forward(self, images: t.Tensor) -> t.Tensor:
+        embedding, prediction = self.model.embed_and_classify(images)
+        return embedding, prediction
 
-    def compute_embedding(self, images: t.Tensor, labels: t.Tensor) -> t.Tensor:
-        return self.embedding_layer(images, targets=labels)
+    # def compute_embedding(self, images: t.Tensor, labels: t.Tensor) -> t.Tensor:
+    #     return self.embedding_layer(images, targets=labels)
 
-    def compute_prediction(self, embedding: t.Tensor, labels: t.Tensor) -> t.Tensor:
-        return self.prediction_layer(embedding, labels)
-         
-    def training_step(
-        self, batch: HIDBatch, *args, **kwargs
-    ) -> t.Tensor:
+    # def compute_prediction(self, embedding: t.Tensor, labels: t.Tensor) -> t.Tensor:
+    #     return self.prediction_layer(embedding, labels)
+
+    def training_step(self, batch: HIDBatch, *args, **kwargs) -> t.Tensor:
         # first unwrap the batch into the input tensor and ground truth labels
         assert isinstance(batch, HIDBatch)
         # The 3 is for colors
-        assert list(batch.images.shape) == [batch.batch_size, 3, self.width, self.height]
+        assert list(batch.images.shape) == [
+            batch.batch_size,
+            3,
+            self.width,
+            self.height,
+        ]
         assert len(batch.images.shape) == 4
 
         images = batch.images
         labels = batch.labels
 
         # then compute the forward pass
-        embedding, prediction = self.forward(images, labels)
+        embedding, prediction = self.forward(images)
 
         # based on the output of the forward pass we compute the loss
-        loss = self.loss_fn(prediction, labels)
+        loss = self.loss_fn(embedding, labels)
 
         # based on the output of the forward pass we compute some metrics
         self.train_acc(prediction, labels)
@@ -145,7 +147,12 @@ class HotelID(LightningModule):
         # first unwrap the batch into the input tensor and ground truth labels
         assert isinstance(batch, HIDBatch)
         # The 3 is for colors
-        assert list(batch.images.shape) == [batch.batch_size, 3, self.width, self.height]
+        assert list(batch.images.shape) == [
+            batch.batch_size,
+            3,
+            self.width,
+            self.height,
+        ]
         assert len(batch.images.shape) == 4
 
         images = batch.images
@@ -153,10 +160,10 @@ class HotelID(LightningModule):
         sample_keys = batch.image_ids
 
         # then compute the forward pass
-        embedding, prediction = self.forward(images, labels)
+        embedding, prediction = self.forward(images)
 
         # based on the output of the forward pass we compute the loss
-        loss = self.loss_fn(prediction, labels)
+        loss = self.loss_fn(embedding, labels)
 
         # based on the output of the forward pass we compute some metrics
         self.val_acc(prediction, labels)
@@ -165,9 +172,7 @@ class HotelID(LightningModule):
         # and passed to `validation_epoch_end`
         return loss
 
-    def validation_epoch_end(
-        self, loss: t.Tensor
-    ) -> None:
+    def validation_epoch_end(self, loss: t.Tensor) -> None:
         # at the end of a validation epoch we compute the validation EER
         # based on the embeddings and log all metrics
 
@@ -179,8 +184,6 @@ class HotelID(LightningModule):
         # log metrics
         self.log("val_acc", self.val_acc, prog_bar=True)
         self.log("val_loss", t.mean(t.stack(loss)), prog_bar=True)
-
-
 
     def configure_optimizers(self):
         # setup the optimization algorithm
