@@ -8,3 +8,4 @@ albumentations
 tqdm
 
 timm
+pytorch_metric_learning
