@@ -49,9 +49,8 @@ class Preprocessor:
         # ])
         
     def train_transform(self, image):
-        image = transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True)(image)
-        
         return albu.Compose([
+            albu.RandomResizedCrop(self.width, self.height, scale=(0.6, 1.0), p=1.0),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf([
                 albu.RandomBrightness(0.1, p=1),
@@ -74,9 +73,8 @@ class Preprocessor:
         ])(image=np.asarray(image))["image"]
     
     def val_transform(self, image):
-        image = transforms.RandomCrop(size=(self.width,self.height), pad_if_needed=True)(image)
-        
         return albu.Compose([
+            albu.Resize(width=self.width, height=self.height),
             albu.CoarseDropout(p=0.5, max_holes=2, 
                            min_height=self.height//8, max_height=self.height//4,
                            min_width=self.width//8,  max_width=self.width//4, 
@@ -89,9 +87,8 @@ class Preprocessor:
             ])(image=np.asarray(image))["image"]
         
     def test_transform(self, image):
-        image = transforms.RandomCrop(size=(self.width,self.height), pad_if_needed=True)(image)
-        
         return albu.Compose([
+            albu.Resize(width=self.width, height=self.height),
             albu.Normalize(mean=(0.485, 0.456, 0.406),
                        std=(0.229, 0.224, 0.225),
                        max_pixel_value=255.0),
