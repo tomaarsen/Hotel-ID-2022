@@ -79,7 +79,7 @@ def main(
         base_hotel_ids = t.tensor([], device="cuda")
         for batch in tqdm(base_dl, desc="Generating base embeddings"):
             batch = batch.to("cuda")
-            base_embeddings = t.cat((base_embeddings, model(batch.images)))
+            base_embeddings = t.cat((base_embeddings, model(batch.images)[0]))
             base_hotel_ids = t.cat((base_hotel_ids, batch.hotel_ids))
         # Base embeddings generated.
 
@@ -98,7 +98,7 @@ def main(
             image = image.to("cuda")
 
             # Get the embedding, and the 5 hotels with the most similar embeddings
-            embedding = model(image)
+            embedding = model(image)[0]
             distances = t.cosine_similarity(embedding, base_embeddings)
             sorted_dist, indices = distances.sort(descending=True)
             for hid in base_hotel_ids[indices]:
