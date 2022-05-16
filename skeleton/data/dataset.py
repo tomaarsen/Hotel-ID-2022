@@ -34,14 +34,13 @@ class ImageDataset(Dataset):
         image_path = self.filenames[index]
         image = Image.open(image_path).convert('RGB')
         # The augmentations need image to be a numpy array
-        image = np.asarray(image)
         image_id = int(image_path.stem)
         hotel_id = int(image_path.parent.stem)
         label = self.hotel_ids.index(hotel_id)
 
         # Apply transformations, i.e. augmentation
         if self.transform:
-            image = self.transform(image=image)["image"]
+            image = self.transform(image)
 
         sample = HIDSample(
             image,
