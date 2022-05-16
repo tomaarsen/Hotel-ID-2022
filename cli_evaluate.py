@@ -104,7 +104,7 @@ def main(
                 embedding = model(image)
                 distances.append(t.cosine_similarity(embedding, base_embeddings))
             distances = t.stack(distances)
-            indices = distances.abs().sort(descending=False).indices
+            indices = distances.sort(descending=True).indices
             score = indices.sort().indices.sum(0)
             ranking = score.sort().indices
             for hid in base_hotel_ids[ranking]:
