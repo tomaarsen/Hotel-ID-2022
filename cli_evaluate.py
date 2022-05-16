@@ -95,18 +95,15 @@ def main(
             image = Image.open(image_file).convert("RGB")
             image = np.asarray(image)
             images = preprocessor.test_transform(image)
-            distances = []
+            distances = t.zeros(base_embeddings.shape[0], device="cuda")
             for image in images:
                 image = image.unsqueeze(0)
                 image = image.to("cuda")
 
                 # Get the embedding, and the 5 hotels with the most similar embeddings
                 embedding = model(image)
-                distances.append(t.cosine_similarity(embedding, base_embeddings))
-            distances = t.stack(distances)
-            indices = distances.abs().sort(descending=False).indices
-            score = indices.sort().indices.sum(0)
-            ranking = score.sort().indices
+                distances += t.cosine_similarity(embedding, base_embeddings)
+            ranking = distances.sort(descending=True).indices
             for hid in base_hotel_ids[ranking]:
                 if hid in prediction:
                     continue
