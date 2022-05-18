@@ -96,10 +96,10 @@ def main(
         # Base embeddings generated.
 
         # List of image paths and the corresponding predictions
-        test_image_files = list((data_folder / "test_images").iterdir())
+        test_image_files = list((data_folder / "test_images").glob("**/*.jpg"))
             
         predictions = []
-
+    
         for image_path in tqdm(test_image_files):
             prediction = []
             pil_image = Image.open(image_path).convert('RGB')

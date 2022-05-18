@@ -76,7 +76,14 @@ class Preprocessor:
         # image = transforms.functional.PiL(image)
         # image = transforms.ToTensor()(image)
         # image = image.permute((2,0,1))
-        images = transforms.FiveCrop(size=(self.width, self.height))(image)
+        try: 
+            images = transforms.FiveCrop(size=(self.width, self.height))(image)
+            # images = transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True)(image)
+            # images = [images]
+        except ValueError:
+            images = transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True)(image)
+            images = [images]
+            
         final_images = []
         for image in images:
             # image = albu.CoarseDropout(p=1., max_holes=1, 
@@ -96,7 +103,7 @@ class Preprocessor:
             # img = image.permute(1, 2, 0)
             # ratio_red = (img[img == t.tensor([254, 0, 0])].shape[0] / 3) / (image.shape[1] * image.shape[2])
             
-            if ratio_red < 0.2:
+            if ratio_red < 0.5:
                 final_images.append(albu.Compose([
                     albu.Normalize(mean=(0.485, 0.456, 0.406),
                             std=(0.229, 0.224, 0.225),
@@ -104,5 +111,11 @@ class Preprocessor:
                     albu.ToFloat(),
                     APT.transforms.ToTensorV2(),
                 ])(image=np.asarray(image))["image"])
+                
+        if (len(final_images) == 0):
+            final_images = transforms.Compose([transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True),
+                                               transforms.ToTensor()
+                                               ])(image)
+            final_images = [final_images]
                 
         return t.stack(final_images)

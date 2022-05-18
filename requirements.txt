@@ -6,5 +6,7 @@ click
 numpy
 albumentations
 tqdm
-
+pandas
+matplotlib
 timm
+torchvision

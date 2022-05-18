@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --partition=csedu
+#SBATCH --gres=gpu:1
 #SBATCH --mem=10G
 #SBATCH --cpus-per-task=6
 #SBATCH --time=12:00:00
@@ -27,6 +28,7 @@ echo "Evaluating for version: $version"
 
 # execute train CLI
 # i=0;
+source "$project_dir"/venv/bin/activate
 for checkpoint_path in logs/lightning_logs/version_"$version"/checkpoints/*; do
   [ -e "$checkpoint_path" ] || continue
   # name=${checkpoint_path##*/}
