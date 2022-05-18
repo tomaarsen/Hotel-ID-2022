@@ -16,7 +16,7 @@ data_folder="$project_dir"/data/data_task2/hotel-id-to-combat-human-trafficking-
 
 
 # hyperparameters for optimization
-batch_size=16
+batch_size=4
 width=512
 height=512
 learning_rate=0.001

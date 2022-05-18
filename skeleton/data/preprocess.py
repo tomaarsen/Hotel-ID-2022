@@ -11,7 +11,7 @@ import numpy as np
 from skeleton.data.batch import HIDSample
 import albumentations as albu
 import albumentations.pytorch as APT
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 ################################################################################
 
@@ -105,4 +105,4 @@ class Preprocessor:
                     APT.transforms.ToTensorV2(),
                 ])(image=np.asarray(image))["image"])
                 
-        return final_images
+        return t.stack(final_images)

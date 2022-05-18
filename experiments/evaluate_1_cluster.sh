@@ -44,6 +44,6 @@ for checkpoint_path in logs/lightning_logs/version_"$version"/checkpoints/*; do
     $score_file \
     --normalize_channel_wise $normalize_channel_wise \
     --n_mels $n_mels \
-    --use-gpu "1"
+    --use-gpu "0"
   ((i++))
 done;

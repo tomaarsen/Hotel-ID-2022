@@ -12,7 +12,7 @@ if [ -z "$*" ]; then echo "Please supply a job id, e.g. 1112891"; exit; fi
 
 # location of repository and data
 project_dir=.
-data_folder="F:/MLiPHotel-IDData/Hotel-ID-2022"
+data_folder="$project_dir"/data/data_task2/hotel-id-to-combat-human-trafficking-2022-fgvc9
 # shard_folder=F:/MLiPVoxCelebData/tiny-voxceleb-shards/
 # shards_dirs_to_evaluate=F:/MLiPVoxCelebData/tiny-voxceleb-shards/dev/,F:/MLiPVoxCelebData/tiny-voxceleb-shards/eval
 # trial_lists=F:/MLiPVoxCelebData/tiny-voxceleb/dev_trials.txt,F:/MLiPVoxCelebData/tiny-voxceleb/eval_trials_no_gt.txt
@@ -38,6 +38,6 @@ for checkpoint_path in logs/lightning_logs/version_"$version"/checkpoints/*; do
   python "$project_dir"/cli_evaluate.py \
     --checkpoint_path $checkpoint_path \
     --data_folder $data_folder \
-    --gpus 1
+    --gpus 0
   # ((i++))
 done;

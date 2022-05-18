@@ -48,8 +48,10 @@ def main(
     data_folder: pathlib.Path,
     gpus: bool,
 ):
+    device = "cpu" if (gpus == 0) else "cuda"
+    
     model = HotelID.load_from_checkpoint(str(checkpoint_path), map_location="cpu")
-    model = model.to("cuda")
+    model = model.to(device)
 
     # load data pipeline
     preprocessor = Preprocessor(model.width, model.height)
@@ -69,36 +71,48 @@ def main(
     with t.no_grad():
         # Generate the base embeddings...
         base_ds = ImageDataset(
-            list((data_folder / "train_images").glob("**/*.jpg")),
+            list((data_folder / "train_images").glob("**/*.jpg"))[:10],
             hotel_ids,
             transform=preprocessor.val_transform,
         )
 
         base_dl = DataLoader(base_ds, batch_size=16, num_workers=3, collate_fn=collate_hid)
+        
+        # test_ds = ImageDataset(
+        #     list((data_folder / "test_images").glob("**/*.jpg"))[:20],
+        #     hotel_ids,
+        #     transform=preprocessor.test_transform,
+        #     )
+        
+        # # Batch size MUST be 1 here
+        # test_dl = DataLoader(test_ds, batch_size=1, num_workers=4, collate_fn=collate_hid)
 
-        base_embeddings = t.tensor([], device="cuda")
-        base_hotel_ids = t.tensor([], device="cuda")
+        base_embeddings = t.tensor([], device=device)
+        base_hotel_ids = t.tensor([], device=device)
         for batch in tqdm(base_dl, desc="Generating base embeddings"):
-            batch = batch.to("cuda")
+            batch = batch.to(device)
             base_embeddings = t.cat((base_embeddings, model(batch.images)))
             base_hotel_ids = t.cat((base_hotel_ids, batch.hotel_ids))
         # Base embeddings generated.
 
         # List of image paths and the corresponding predictions
         test_image_files = list((data_folder / "test_images").iterdir())
+            
         predictions = []
 
-        for image_file in tqdm(test_image_files):
+        for image_path in tqdm(test_image_files):
             prediction = []
-            
-            # Apply validation transformations to the test image
-            image = Image.open(image_file).convert("RGB")
-            image = np.asarray(image)
-            images = preprocessor.test_transform(image)
-            distances = t.zeros(base_embeddings.shape[0], device="cuda")
+            pil_image = Image.open(image_path).convert('RGB')
+            images = preprocessor.test_transform(pil_image)
+            # Apply test transformations to the test image
+            # image = Image.open(image_file).convert("RGB")
+            # image = np.asarray(image)
+            # images = preprocessor.test_transform(image)
+            # print(images)
+            distances = t.zeros(base_embeddings.shape[0], device=device)
             for image in images:
                 image = image.unsqueeze(0)
-                image = image.to("cuda")
+                image = image.to(device)
 
                 # Get the embedding, and the 5 hotels with the most similar embeddings
                 embedding = model(image)

@@ -73,7 +73,7 @@ class HotelIDDataModule(LightningDataModule):
         val_ds = ImageDataset(
             val_filepaths,
             self.hotel_ids,
-            transform=self.preprocessor.test_transform,
+            transform=self.preprocessor.val_transform,
         )
         
         self.val_dl = t.utils.data.DataLoader(
