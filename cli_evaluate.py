@@ -71,7 +71,7 @@ def main(
     with t.no_grad():
         # Generate the base embeddings...
         base_ds = ImageDataset(
-            list((data_folder / "train_images").glob("**/*.jpg"))[:10],
+            list((data_folder / "train_images").glob("**/*.jpg")),
             hotel_ids,
             transform=preprocessor.val_transform,
         )
