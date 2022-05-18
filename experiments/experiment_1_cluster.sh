@@ -24,7 +24,7 @@ num_epochs=20
 momentum=0.9
 weight_decay=0.0005
 min_lr=0.0
-backbone="eca_nfnet_l0"
+backbone="eca_nfnet_l2"
 
 # hyperparameters related to data pre-processing and network architecture
 embedding_size=4096
