@@ -16,23 +16,25 @@ data_folder="$project_dir"/data/data_task2/hotel-id-to-combat-human-trafficking-
 
 
 # hyperparameters for optimization
-batch_size=16
+batch_size=4
 width=512
 height=512
-learning_rate=0.1
+learning_rate=0.001
 num_epochs=20
 momentum=0.9
 weight_decay=0.0005
 min_lr=0.0
+backbone="eca_nfnet_l2"
 
 # hyperparameters related to data pre-processing and network architecture
-embedding_size=512
+embedding_size=4096
 num_workers=4
 
 # execute train CLI
 source "$project_dir"/venv/bin/activate
 python "$project_dir"/cli_train.py \
   --data_folder $data_folder \
+  --backbone $backbone \
   --batch_size $batch_size \
   --width $width \
   --height $height \

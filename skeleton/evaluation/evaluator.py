@@ -40,7 +40,7 @@ class EmbeddingSample:
         elif isinstance(self.embedding, t.Tensor):
             self._verify_embedding(self.embedding)
         else:
-            raise ValueError(f"unexpected {type(self.embedding)=}")
+            raise ValueError(f"unexpected {type(self.embedding)}")
 
     @staticmethod
     def _verify_embedding(embedding: t.Tensor):
