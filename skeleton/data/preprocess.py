@@ -11,16 +11,12 @@ import numpy as np
 from skeleton.data.batch import HIDSample
 import albumentations as albu
 import albumentations.pytorch as APT
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 ################################################################################
 
 
-def get_ratio(image):
-    (_, width, height) = image.shape
-    is_red = (t.logical_and(t.logical_and(t.ge(image[0], 0.99), t.le(image[1], 0.01)), t.le(image[1], 0.01)))
-    red_ratio = t.sum(is_red.flatten() == True) / (width * height)
-    return red_ratio
+
     
     
 
@@ -32,11 +28,18 @@ class Preprocessor:
     ) -> None:
         self.width = width
         self.height = height
+        self.red_threshold = 0.25
+        self.n_crops = 8
+        
+    def _get_ratio(self, image):
+        is_red = (t.logical_and(t.logical_and(t.ge(image[0], 0.99), t.le(image[1], 0.01)), t.le(image[1], 0.01)))
+        red_ratio = t.sum(is_red.flatten() == True) / (self.width * self.height)
+        return red_ratio
 
     def train_transform(self, image):
         return albu.Compose([
             albu.RandomResizedCrop(self.width, self.height, scale=(0.6, 1.0), p=1.0),
-            albu.Resize(width=self.width, height=self.height),
+            # albu.Resize(width=self.width, height=self.height),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf([
                 albu.RandomBrightness(0.1, p=1),
@@ -76,34 +79,30 @@ class Preprocessor:
         # image = transforms.functional.PiL(image)
         # image = transforms.ToTensor()(image)
         # image = image.permute((2,0,1))
-        try: 
-            images = transforms.FiveCrop(size=(self.width, self.height))(image)
-            # images = transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True)(image)
-            # images = [images]
-        except ValueError:
-            images = transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True)(image)
-            images = [images]
+        # try: 
+        #     images = transforms.FiveCrop(size=(self.width, self.height))(image)
+        #     # images = transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True)(image)
+        #     # images = [images]
+        # except ValueError:
+        #     images = transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True)(image)
+        #     images = [images]
+        
+        images = []
+        plt.imshow(image)
+        plt.savefig("img_before.png")
+        for i in range(self.n_crops):
+            images.append(albu.RandomResizedCrop(self.width, self.height, scale=(0.2, 0.8), p=1.0)(image=np.asarray(image))["image"])
+            plt.imshow(images[i])
+            plt.savefig(f"img_after_{i}.png")
             
         final_images = []
         for image in images:
-            # image = albu.CoarseDropout(p=1., max_holes=1, 
-            #        min_height=self.height//4, max_height=self.height//2,
-            #        min_width=self.width//4,  max_width=self.width//2, 
-            #        fill_value=(255,0,0))(image=np.asarray(image))["image"]
+            # Compute red ration
             image_tensor = transforms.ToTensor()(image)
-            ratio_red = get_ratio(image_tensor)
+            ratio_red = self._get_ratio(image_tensor)
             
-            # img = image.permute((1,2,0))
-            # plt.imshow(img)
-            # plt.savefig("img.png")
-            # plt.show()
-            # corners = (image[:,0,0], image[:,-1,-1], image[:,0,-1], image[:,-1,0])
-            # n_red_corners = sum(tuple(corner) == (255, 0, 0) for corner in corners)
-            # ratio_red = image[:,t.logical_and(t.logical_and(image[0] == 254, image[1] == 0), image[2] == 0)].shape[-1] / (image.shape[1] * image.shape[2])
-            # img = image.permute(1, 2, 0)
-            # ratio_red = (img[img == t.tensor([254, 0, 0])].shape[0] / 3) / (image.shape[1] * image.shape[2])
-            
-            if ratio_red < 0.5:
+            # Only consider image if red ratio below threshold 
+            if ratio_red < self.red_threshold:
                 final_images.append(albu.Compose([
                     albu.Normalize(mean=(0.485, 0.456, 0.406),
                             std=(0.229, 0.224, 0.225),
@@ -111,11 +110,10 @@ class Preprocessor:
                     albu.ToFloat(),
                     APT.transforms.ToTensorV2(),
                 ])(image=np.asarray(image))["image"])
-                
+        
+        # Ensure at least one image is in list
         if (len(final_images) == 0):
-            final_images = transforms.Compose([transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True),
-                                               transforms.ToTensor()
-                                               ])(image)
+            final_images = albu.RandomResizedCrop(self.width, self.height, scale=(0.6, 1.0), p=1.0)(image=np.asarray(image))["image"]
             final_images = [final_images]
                 
         return t.stack(final_images)
