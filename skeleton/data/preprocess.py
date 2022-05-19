@@ -14,10 +14,6 @@ import albumentations.pytorch as APT
 import matplotlib.pyplot as plt
 
 ################################################################################
-
-
-
-    
     
 
 class Preprocessor:
@@ -75,25 +71,14 @@ class Preprocessor:
             APT.transforms.ToTensorV2(),
             ])(image=np.asarray(image))["image"]
         
-    def test_transform(self, image):
-        # image = transforms.functional.PiL(image)
-        # image = transforms.ToTensor()(image)
-        # image = image.permute((2,0,1))
-        # try: 
-        #     images = transforms.FiveCrop(size=(self.width, self.height))(image)
-        #     # images = transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True)(image)
-        #     # images = [images]
-        # except ValueError:
-        #     images = transforms.RandomCrop(size=(self.width, self.height), pad_if_needed=True)(image)
-        #     images = [images]
-        
+    def test_transform(self, image):       
         images = []
-        plt.imshow(image)
-        plt.savefig("img_before.png")
+        # plt.imshow(image)
+        # plt.savefig("img_before.png")
         for i in range(self.n_crops):
             images.append(albu.RandomResizedCrop(self.width, self.height, scale=(0.2, 0.8), p=1.0)(image=np.asarray(image))["image"])
-            plt.imshow(images[i])
-            plt.savefig(f"img_after_{i}.png")
+            # plt.imshow(images[i])
+            # plt.savefig(f"img_after_{i}.png")
             
         final_images = []
         for image in images:
@@ -113,7 +98,15 @@ class Preprocessor:
         
         # Ensure at least one image is in list
         if (len(final_images) == 0):
-            final_images = albu.RandomResizedCrop(self.width, self.height, scale=(0.6, 1.0), p=1.0)(image=np.asarray(image))["image"]
+            final_images = self.test_transform_basic(image)
             final_images = [final_images]
                 
         return t.stack(final_images)
+    
+    def test_transform_basic(self, image):
+        return albu.Compose([albu.RandomResizedCrop(self.width, self.height, scale=(0.8, 1.0), p=1.0),
+                      albu.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0), 
+                      albu.ToFloat(),
+                      APT.transforms.ToTensorV2(),
+                ])(image=np.asarray(image))["image"]
+        

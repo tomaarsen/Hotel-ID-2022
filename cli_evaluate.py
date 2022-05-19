@@ -76,7 +76,7 @@ def main(
             transform=preprocessor.val_transform,
         )
 
-        base_dl = DataLoader(base_ds, batch_size=16, num_workers=3, collate_fn=collate_hid)
+        base_dl = DataLoader(base_ds, batch_size=16, num_workers=2, collate_fn=collate_hid)
         
         # test_ds = ImageDataset(
         #     list((data_folder / "test_images").glob("**/*.jpg"))[:20],
