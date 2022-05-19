@@ -41,7 +41,7 @@ ENSEMBLE = [
     },
     {
         "model": "efficientnet_b3 + ArcFace",
-        "map@5": None,
+        "map@5": 0.504,
         "val_acc": 0.461,
         "id": 2006869,
         "hash": "d3ac50adff07b7146a6b72a1deb36f1dd1af3e61",
