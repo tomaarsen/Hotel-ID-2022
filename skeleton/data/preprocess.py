@@ -25,7 +25,7 @@ class Preprocessor:
         self.width = width
         self.height = height
         self.red_threshold = 0.25
-        self.n_crops = 8
+        self.n_crops = 10
         
     def _get_ratio(self, image):
         is_red = (t.logical_and(t.logical_and(t.ge(image[0], 0.99), t.le(image[1], 0.01)), t.le(image[1], 0.01)))
@@ -76,7 +76,7 @@ class Preprocessor:
         # plt.imshow(image)
         # plt.savefig("img_before.png")
         for i in range(self.n_crops):
-            images.append(albu.RandomResizedCrop(self.width, self.height, scale=(0.2, 0.8), p=1.0)(image=np.asarray(image))["image"])
+            images.append(albu.RandomResizedCrop(self.width, self.height, scale=(0.6, 1.0), p=1.0)(image=np.asarray(image))["image"])
             # plt.imshow(images[i])
             # plt.savefig(f"img_after_{i}.png")
             
@@ -104,7 +104,7 @@ class Preprocessor:
         return t.stack(final_images)
     
     def test_transform_basic(self, image):
-        return albu.Compose([albu.RandomResizedCrop(self.width, self.height, scale=(0.8, 1.0), p=1.0),
+        return albu.Compose([albu.Resize(width=self.width, height=self.height),
                       albu.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0), 
                       albu.ToFloat(),
                       APT.transforms.ToTensorV2(),

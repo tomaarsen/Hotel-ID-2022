@@ -33,67 +33,50 @@ from skeleton.models.prototype import HotelID
 @click.option(
     "--checkpoint_path",
     type=pathlib.Path,
-    default=None,
     required=True,
-    help="the checkpoint to evaluate",
+    multiple=True,
+    help="the list of checkpoints to evaluate",
 )
 @click.option(
     "--data_folder",
     type=pathlib.Path,
     required=True,
 )
-@click.option("--gpus", type=int, default=1, help="number of gpus to use")
+@click.option(
+    "--embedding_folder",
+    type=pathlib.Path,
+    required=True,
+)
 def main(
-    checkpoint_path: pathlib.Path,
+    checkpoint_path: List[pathlib.Path],
     data_folder: pathlib.Path,
-    gpus: bool,
+    embedding_folder: pathlib.Path,
 ):
-    device = "cpu" if (gpus == 0) else "cuda"
-    
-    model = HotelID.load_from_checkpoint(str(checkpoint_path), map_location="cpu")
-    model = model.to(device)
+    all_base_embeddings = []
+    all_base_hotel_ids = []
+    models = []
+    ensembles = []
+    preprocessors = []
+    for cp_path in checkpoint_path:
+        ensemble = ENSEMBLE[cp_path.name]
+        short_hash = ensemble["hash"][:7]
+        # Import from the correct folder
+        prototype = import_module(f"skeleton_{short_hash}.models.prototype")
+        preprocess = import_module(f"skeleton_{short_hash}.data.preprocess")
 
-    # load data pipeline
-    preprocessor = Preprocessor(model.width, model.height)
+        model = prototype.HotelID.load_from_checkpoint(str(cp_path), map_location="cpu")
+        model = model.to("cuda")
+        model = model.eval()
+        models.append(model)
 
-    # set to eval mode, and move to GPU if applicable
-    model = model.eval()
+        # load data pipeline
+        preprocessor = preprocess.Preprocessor(model.width, model.height)
+        preprocessors.append(preprocessor)
 
-    # Get the list of hotel_ids, i.e. a mapping of index/label to hotel ID
-    hotel_ids = sorted(
-        int(folder.stem) for folder in (data_folder / "train_images").iterdir()
-    )
+        all_base_embeddings.append(t.load(embedding_folder / f'{ensemble["id"]}_embeds.pt'))
+        all_base_hotel_ids.append(t.load(embedding_folder / f'{ensemble["id"]}_hids.pt'))
 
-    # hotelid_dm = HotelIDDataModule(data_folder, hotel_ids, 1, 2, preprocessor, 0.0)
-    # base_dl = hotelid_dm.val_dataloader()
-    # base_embeddings = [sample for sample in base_dl]
-    # breakpoint()
-    with t.no_grad():
-        # Generate the base embeddings...
-        base_ds = ImageDataset(
-            list((data_folder / "train_images").glob("**/*.jpg")),
-            hotel_ids,
-            transform=preprocessor.val_transform,
-        )
-
-        base_dl = DataLoader(base_ds, batch_size=16, num_workers=2, collate_fn=collate_hid)
-        
-        # test_ds = ImageDataset(
-        #     list((data_folder / "test_images").glob("**/*.jpg"))[:20],
-        #     hotel_ids,
-        #     transform=preprocessor.test_transform,
-        #     )
-        
-        # # Batch size MUST be 1 here
-        # test_dl = DataLoader(test_ds, batch_size=1, num_workers=4, collate_fn=collate_hid)
-
-        base_embeddings = t.tensor([], device=device)
-        base_hotel_ids = t.tensor([], device=device)
-        for batch in tqdm(base_dl, desc="Generating base embeddings"):
-            batch = batch.to(device)
-            base_embeddings = t.cat((base_embeddings, model(batch.images)))
-            base_hotel_ids = t.cat((base_hotel_ids, batch.hotel_ids))
-        # Base embeddings generated.
+        ensembles.append(ensemble)
 
         # List of image paths and the corresponding predictions
         test_image_files = list((data_folder / "test_images").glob("**/*.jpg"))
