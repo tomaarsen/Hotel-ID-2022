@@ -25,7 +25,7 @@ class Preprocessor:
         self.width = width
         self.height = height
         self.red_threshold = 0.25
-        self.n_crops = 10
+        self.n_crops = 5
         
     def _get_ratio(self, image):
         is_red = (t.logical_and(t.logical_and(t.ge(image[0], 0.99), t.le(image[1], 0.01)), t.le(image[1], 0.01)))

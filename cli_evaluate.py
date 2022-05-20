@@ -39,7 +39,6 @@ from skeleton.models.prototype import HotelID
     "--checkpoint_path",
     type=pathlib.Path,
     required=True,
-    multiple=True,
     help="the list of checkpoints to evaluate",
 )
 @click.option(
@@ -53,66 +52,77 @@ from skeleton.models.prototype import HotelID
     required=True,
 )
 def main(
-    checkpoint_path: List[pathlib.Path],
+    checkpoint_path: pathlib.Path,
     data_folder: pathlib.Path,
     embedding_folder: pathlib.Path,
 ):
-    all_base_embeddings = []
-    all_base_hotel_ids = []
-    models = []
-    ensembles = []
-    preprocessors = []
-    for cp_path in checkpoint_path:
-        ensemble = ENSEMBLE[cp_path.name]
-        short_hash = ensemble["hash"][:7]
-        # # Import from the correct folder
-        # prototype = import_module(f"skeleton_{short_hash}.models.prototype")
-        # preprocess = import_module(f"skeleton_{short_hash}.data.preprocess")
-
-        model = HotelID.load_from_checkpoint(str(cp_path), map_location="cpu")
-        model = model.to("cuda")
-        model = model.eval()
-        models.append(model)
-
-        # load data pipeline
-        preprocessor = preprocess.Preprocessor(model.width, model.height)
-        preprocessors.append(preprocessor)
-
-        all_base_embeddings.append(t.load(embedding_folder / f'{ensemble["id"]}_embeds.pt'))
-        all_base_hotel_ids.append(t.load(embedding_folder / f'{ensemble["id"]}_hids.pt'))
-
-        ensembles.append(ensemble)
-
-        # List of image paths and the corresponding predictions
-        test_image_files = list((data_folder / "test_images").glob("**/*.jpg"))
-            
-        predictions = []
+    device = "cuda"
+    # all_base_embeddings = []
+    # all_base_hotel_ids = []
+    # models = []
+    # ensembles = []
+    # preprocessors = []
     
-        for image_path in tqdm(test_image_files):
-            prediction = []
-            pil_image = Image.open(image_path).convert('RGB')
-            images = preprocessor.test_transform(pil_image)
-            # Apply test transformations to the test image
-            # image = Image.open(image_file).convert("RGB")
-            # image = np.asarray(image)
-            # images = preprocessor.test_transform(image)
-            # print(images)
-            distances = t.zeros(base_embeddings.shape[0], device=device)
-            for image in images:
-                image = image.unsqueeze(0)
-                image = image.to(device)
+    
+    # for cp_path in checkpoint_path:
+    #     ensemble = ENSEMBLE[cp_path.name]
+    #     short_hash = ensemble["hash"][:7]
+    #     # # Import from the correct folder
+    #     # prototype = import_module(f"skeleton_{short_hash}.models.prototype")
+    #     # preprocess = import_module(f"skeleton_{short_hash}.data.preprocess")
 
-                # Get the embedding, and the 5 hotels with the most similar embeddings
-                embedding = model(image)
-                distances += t.cosine_similarity(embedding, base_embeddings)
-            ranking = distances.sort(descending=True).indices
-            for hid in base_hotel_ids[ranking]:
-                if hid in prediction:
-                    continue
-                prediction.append(hid)
-                if len(prediction) == 5:
-                    break
-            predictions.append(" ".join(str(int(pred)) for pred in prediction))
+    #     model = HotelID.load_from_checkpoint(str(cp_path), map_location="cpu")
+    #     model = model.to(device)
+    #     model = model.eval()
+    #     models.append(model)
+
+    #     # load data pipeline
+    #     preprocessor = Preprocessor(model.width, model.height)
+    #     preprocessors.append(preprocessor)
+
+    #     all_base_embeddings.append(t.load(embedding_folder / f'{ensemble["id"]}_embeds.pt'))
+    #     all_base_hotel_ids.append(t.load(embedding_folder / f'{ensemble["id"]}_hids.pt'))
+
+    #     ensembles.append(ensemble)
+
+    # List of image paths and the corresponding predictions
+    test_image_files = list((data_folder / "test_images").glob("**/*.jpg"))
+        
+    predictions = []
+    ensemble = ENSEMBLE[checkpoint_path.name]
+    model = HotelID.load_from_checkpoint(str(checkpoint_path), map_location="cpu")
+    model = model.to(device)
+    model = model.eval()
+    base_embeddings = t.load(embedding_folder / f'{ensemble["id"]}_embeds.pt')
+    base_hotel_ids = t.load(embedding_folder / f'{ensemble["id"]}_hids.pt')
+    
+    preprocessor = Preprocessor(model.width, model.height)
+
+    for image_path in tqdm(test_image_files):
+        prediction = []
+        pil_image = Image.open(image_path).convert('RGB')
+        images = preprocessor.test_transform(pil_image)
+        # Apply test transformations to the test image
+        # image = Image.open(image_file).convert("RGB")
+        # image = np.asarray(image)
+        # images = preprocessor.test_transform(image)
+        # print(images)
+        distances = t.zeros(base_embeddings.shape[0], device=device)
+        for i, image in enumerate(images):
+            print(f"image {i}/{len(images)}")
+            image = image.unsqueeze(0).to(device)
+
+            # Get the embedding, and the 5 hotels with the most similar embeddings
+            embedding = model(image)
+            distances += t.cosine_similarity(embedding, base_embeddings)
+        ranking = distances.sort(descending=True).indices
+        for hid in base_hotel_ids[ranking]:
+            if hid in prediction:
+                continue
+            prediction.append(hid)
+            if len(prediction) == 5:
+                break
+        predictions.append(" ".join(str(int(pred)) for pred in prediction))
 
     df = pd.DataFrame(
         data={
