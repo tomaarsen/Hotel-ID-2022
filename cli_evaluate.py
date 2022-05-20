@@ -8,22 +8,27 @@
 
 import csv
 import os
+from typing import List
 import click
 import pathlib
 from PIL import Image
 import numpy as np
 import pandas as pd
 
-import torchvision.transforms as T
 import torch as t
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from ensemble import ENSEMBLE
+
+from importlib import import_module
+
 from skeleton.data.collating import collate_hid
 from skeleton.data.dataset import ImageDataset
 from skeleton.data.hotel_id import HotelIDDataModule
 
 from skeleton.data.preprocess import Preprocessor
 from skeleton.models.prototype import HotelID
+
 
 ########################################################################################
 # CLI input arguments
@@ -60,11 +65,11 @@ def main(
     for cp_path in checkpoint_path:
         ensemble = ENSEMBLE[cp_path.name]
         short_hash = ensemble["hash"][:7]
-        # Import from the correct folder
-        prototype = import_module(f"skeleton_{short_hash}.models.prototype")
-        preprocess = import_module(f"skeleton_{short_hash}.data.preprocess")
+        # # Import from the correct folder
+        # prototype = import_module(f"skeleton_{short_hash}.models.prototype")
+        # preprocess = import_module(f"skeleton_{short_hash}.data.preprocess")
 
-        model = prototype.HotelID.load_from_checkpoint(str(cp_path), map_location="cpu")
+        model = HotelID.load_from_checkpoint(str(cp_path), map_location="cpu")
         model = model.to("cuda")
         model = model.eval()
         models.append(model)
