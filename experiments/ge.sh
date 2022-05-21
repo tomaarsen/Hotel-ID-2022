@@ -2,7 +2,7 @@
 #SBATCH --partition=csedu
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --cpus-per-task=6
+#SBATCH --cpus-per-task=2
 #SBATCH --time=24:00:00
 #SBATCH --output=./logs/slurm/%J.out
 #SBATCH --error=./logs/slurm/%J.err
