@@ -8,3 +8,4 @@ albumentations
 tqdm
 
 timm
+pandas
