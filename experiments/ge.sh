@@ -16,6 +16,7 @@ if [ -z "$*" ]; then echo "Please supply a checkpoint path"; exit; fi
 project_dir=.
 data_folder="$project_dir"/data/data_task2/hotel-id-to-combat-human-trafficking-2022-fgvc9
 
+source "$project_dir"/venv/bin/activate
 python "$project_dir"/generate_embeddings.py \
     --checkpoint_path $1 \
     --data_folder $data_folder
