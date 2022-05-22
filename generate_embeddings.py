@@ -72,7 +72,6 @@ def main(
         # load data pipeline
         preprocessor = preprocess.Preprocessor(model.width, model.height)
 
-
         # Get the list of hotel_ids, i.e. a mapping of index/label to hotel ID
         hotel_ids = sorted(
             int(folder.stem) for folder in (data_folder / "train_images").iterdir()
@@ -80,7 +79,7 @@ def main(
 
         with t.no_grad():
             # Generate the base embeddings...
-            filenames = list((data_folder / "train_images").glob("**/*.jpg"))
+            filenames = sorted((data_folder / "train_images").glob("**/*.jpg"))
             if test:
                 filenames = filenames[:10]
             base_ds = dataset.ImageDataset(
