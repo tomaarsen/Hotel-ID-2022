@@ -77,8 +77,8 @@ def main(
         preprocessor = preprocess.Preprocessor(model.width, model.height)
         preprocessors.append(preprocessor)
 
-        all_base_embeddings.append(t.load(embedding_folder / f'{ensemble["id"]}_embeds.pt'))
-        all_base_hotel_ids.append(t.load(embedding_folder / f'{ensemble["id"]}_hids.pt'))
+        all_base_embeddings.append(t.load(embedding_folder / f'{ensemble["id"]}_embeds.pt', map_location="cpu"))
+        all_base_hotel_ids.append(t.load(embedding_folder / f'{ensemble["id"]}_hids.pt', map_location="cpu"))
 
         ensembles.append(ensemble)
     # List of image paths and the corresponding predictions
@@ -88,7 +88,7 @@ def main(
     for image_file in tqdm(test_image_files, "Evaluating images"):
         prediction = []
 
-        distances = t.zeros(all_base_embeddings[0].shape[0], device="cuda")
+        distances = t.zeros(all_base_embeddings[0].shape[0], device="cpu")
         for ensemble, model, preprocessor, base_embeddings, base_hotel_ids in zip(
             ensembles, models, preprocessors, all_base_embeddings, all_base_hotel_ids
         ):
@@ -100,7 +100,7 @@ def main(
             image = image.to("cuda")
 
             # Get the embedding, and the 5 hotels with the most similar embeddings
-            embedding = model(image)
+            embedding = model(image).detach().cpu()
             distances += t.cosine_similarity(embedding, base_embeddings)
         sorted_dist, indices = distances.sort(descending=True)
         for hid in base_hotel_ids[indices]:
