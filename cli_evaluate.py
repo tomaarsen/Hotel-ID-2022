@@ -69,7 +69,6 @@ def main(
         preprocess = import_module(f"skeleton_{short_hash}.data.preprocess")
 
         model = prototype.HotelID.load_from_checkpoint(str(cp_path), map_location="cpu")
-        model = model.to("cuda")
         model = model.eval()
         models.append(model)
 
@@ -84,26 +83,33 @@ def main(
     # List of image paths and the corresponding predictions
     test_image_files = list((data_folder / "test_images").iterdir())
     predictions = []
+    distances = t.zeros((len(test_image_files), all_base_embeddings[0].shape[0]), device="cpu")
+    for ensemble, model, preprocessor, base_embeddings, base_hotel_ids in zip(
+        ensembles, models, preprocessors, all_base_embeddings, all_base_hotel_ids
+    ):
+        model = model.cuda()
+        base_embeddings = base_embeddings.cuda()
+        for i, image_file in tqdm(enumerate(test_image_files), "Evaluating images"):
+            prediction = []
 
-    for image_file in tqdm(test_image_files, "Evaluating images"):
-        prediction = []
-
-        distances = t.zeros(all_base_embeddings[0].shape[0], device="cpu")
-        for ensemble, model, preprocessor, base_embeddings, base_hotel_ids in zip(
-            ensembles, models, preprocessors, all_base_embeddings, all_base_hotel_ids
-        ):
             # Apply validation transformations to the test image
             image = Image.open(image_file).convert("RGB")
             image = np.asarray(image)
             image = preprocessor.test_transform(image=image)["image"]
             image = image.unsqueeze(0)
-            image = image.to("cuda")
 
             # Get the embedding, and the 5 hotels with the most similar embeddings
-            embedding = model(image).detach().cpu()
-            distances += t.cosine_similarity(embedding, base_embeddings)
-        sorted_dist, indices = distances.sort(descending=True)
-        for hid in base_hotel_ids[indices]:
+            embedding = model(image.cuda())
+            distances[i] += t.cosine_similarity(embedding, base_embeddings).detach().cpu()
+            del image
+            t.cuda.empty_cache()
+        del model
+        del base_embeddings
+    indices = distances.sort(1, descending=True).indices
+    predictions = []
+    for hids_per_image in all_base_hotel_ids[0][indices]:
+        prediction = []
+        for hid in hids_per_image:
             if hid in prediction:
                 continue
             prediction.append(hid)
