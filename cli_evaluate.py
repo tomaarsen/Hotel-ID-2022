@@ -3,11 +3,9 @@
 #
 # Implement the command-line interface for prediction/inference.
 #
-# Author(s): Nik Vaessen, David van Leeuwen
+# Author(s): Nik Vaessen, David van Leeuwen, Tom Aarsen, Tijn Berns
 ################################################################################
 
-import csv
-import os
 import click
 import pathlib
 from PIL import Image
@@ -19,7 +17,6 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from skeleton.data.collating import collate_hid
 from skeleton.data.dataset import ImageDataset
-from skeleton.data.hotel_id import HotelIDDataModule
 
 from skeleton.data.preprocess import Preprocessor
 from skeleton.models.prototype import HotelID
@@ -61,10 +58,6 @@ def main(
         int(folder.stem) for folder in (data_folder / "train_images").iterdir()
     )
 
-    # hotelid_dm = HotelIDDataModule(data_folder, hotel_ids, 1, 2, preprocessor, 0.0)
-    # base_dl = hotelid_dm.val_dataloader()
-    # base_embeddings = [sample for sample in base_dl]
-    # breakpoint()
     with t.no_grad():
         # Generate the base embeddings...
         base_ds = ImageDataset(

@@ -3,7 +3,7 @@
 #
 # Implement the command-line interface for training a network.
 #
-# Author(s): Nik Vaessen
+# Author(s): Nik Vaessen, Tom Aarsen, Tijn Berns
 ################################################################################
 
 import pathlib
@@ -142,7 +142,6 @@ def main(
         preprocessor=Preprocessor(width, height),
     )
 
-    # alpha = dm.get_alpha()
     device = 'cuda:0' if gpus != 0 else 'cpu'
 
     # build model
@@ -201,10 +200,6 @@ def main(
 
     # train loop
     trainer.fit(model, datamodule=dm)
-
-    # # test loop (on dev set)
-    # model = model.load_from_checkpoint(checkpointer.best_model_path)
-    # trainer.test(model, datamodule=dm)
 
 
 if __name__ == "__main__":
